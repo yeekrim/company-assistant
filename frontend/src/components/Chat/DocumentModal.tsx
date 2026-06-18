@@ -73,7 +73,7 @@ export default function DocumentModal({ onClose }: Props) {
                 <li key={doc.name} className={styles.docItem}>
                   <span className={styles.docIcon}>📄</span>
                   <span className={styles.docName} title={doc.name}>{doc.name}</span>
-                  <span className={styles.docChunks}>{doc.chunks} 청크</span>
+
                   <button
                     className={styles.deleteBtn}
                     onClick={() => handleDelete(doc.name)}

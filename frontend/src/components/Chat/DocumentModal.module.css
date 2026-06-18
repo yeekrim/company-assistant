@@ -101,11 +101,6 @@
   white-space: nowrap;
 }
 
-.docChunks {
-  font-size: 11px;
-  color: #b5aca2;
-  flex-shrink: 0;
-}
 
 .deleteBtn {
   flex-shrink: 0;
