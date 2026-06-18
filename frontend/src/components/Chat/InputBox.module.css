@@ -1,7 +1,7 @@
 .wrapper {
-  padding: 16px 20px 20px;
-  border-top: 1px solid #1e293b;
-  background: #0f172a;
+  padding: 14px 20px 20px;
+  border-top: 1px solid #e8e2d9;
+  background: #faf9f7;
 }
 
 .inputRow {
@@ -10,15 +10,17 @@
   gap: 10px;
   max-width: 820px;
   margin: 0 auto;
-  background: #1e293b;
-  border: 1px solid #334155;
+  background: #ffffff;
+  border: 1.5px solid #e8e2d9;
   border-radius: 14px;
   padding: 10px 10px 10px 16px;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-shadow: 0 1px 4px rgba(44, 40, 37, 0.06);
 }
 
 .inputRow:focus-within {
-  border-color: #6366f1;
+  border-color: #5b9bd5;
+  box-shadow: 0 0 0 3px rgba(91, 155, 213, 0.1);
 }
 
 .textarea {
@@ -26,7 +28,7 @@
   background: transparent;
   border: none;
   outline: none;
-  color: #f1f5f9;
+  color: #2c2825;
   font-size: 14px;
   line-height: 1.6;
   resize: none;
@@ -36,7 +38,7 @@
 }
 
 .textarea::placeholder {
-  color: #475569;
+  color: #c4bdb5;
 }
 
 .textarea:disabled {
@@ -48,7 +50,7 @@
   height: 36px;
   min-width: 36px;
   border-radius: 10px;
-  background: #6366f1;
+  background: #5b9bd5;
   border: none;
   color: white;
   font-size: 18px;
@@ -58,6 +60,7 @@
   align-items: center;
   justify-content: center;
   transition: opacity 0.2s, transform 0.1s;
+  box-shadow: 0 2px 8px rgba(91, 155, 213, 0.3);
 }
 
 .sendBtn:hover:not(:disabled) {
@@ -69,13 +72,14 @@
 }
 
 .sendBtn:disabled {
-  opacity: 0.3;
+  background: #d6cfc6;
+  box-shadow: none;
   cursor: not-allowed;
 }
 
 .hint {
   text-align: center;
   font-size: 11px;
-  color: #334155;
+  color: #c4bdb5;
   margin: 8px 0 0;
 }
