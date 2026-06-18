@@ -1,17 +1,16 @@
 import { useRef } from 'react';
 import { useAuthStore } from '../../store/authStore';
-import { useChatStore } from '../../store/chatStore';
 import styles from './Sidebar.module.css';
 
 export default function Sidebar() {
   const { user, logout } = useAuthStore();
-  const { startNewConversation } = useChatStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    alert(`"${file.name}" 업로드 준비됨 (백엔드 RAG 파이프라인 연동 예정)`);
+    // TODO: 파일을 백엔드로 전송 (RAG 파이프라인 연동)
+    alert(`"${file.name}" 업로드 준비됨 (백엔드 연동 예정)`);
     e.target.value = '';
   };
 
@@ -19,12 +18,11 @@ export default function Sidebar() {
     <aside className={styles.sidebar}>
       <div className={styles.top}>
         <div className={styles.logo}>AI 어시스턴트</div>
-        <button className={styles.newChat} onClick={startNewConversation}>
-          + 새 대화
-        </button>
+        <button className={styles.newChat}>+ 새 대화</button>
       </div>
 
       <div className={styles.middle}>
+        {/* 대화 목록 (추후 구현) */}
         <p className={styles.empty}>대화 내역이 없습니다</p>
       </div>
 
@@ -32,7 +30,10 @@ export default function Sidebar() {
         {user?.role === 'admin' && (
           <div className={styles.uploadSection}>
             <p className={styles.uploadLabel}>사내 문서 관리</p>
-            <button className={styles.uploadBtn} onClick={() => fileInputRef.current?.click()}>
+            <button
+              className={styles.uploadBtn}
+              onClick={() => fileInputRef.current?.click()}
+            >
               📄 문서 업로드
             </button>
             <input

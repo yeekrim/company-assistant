@@ -1,9 +1,14 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from datetime import datetime
 
 class LoginRequest(BaseModel):
     email: str
     password: str
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: "UserResponse"
 
 class UserResponse(BaseModel):
     id: int
@@ -11,11 +16,6 @@ class UserResponse(BaseModel):
     name: str
     role: str
     company_id: int
-
-class TokenResponse(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
-    user: UserResponse
 
 class MessageResponse(BaseModel):
     id: int
