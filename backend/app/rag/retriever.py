@@ -29,6 +29,22 @@ def add_documents(company_id: int, chunks: list[str], doc_name: str):
         metadatas=[{"source": doc_name} for _ in chunks],
     )
 
+def list_documents(company_id: int) -> list[dict]:
+    collection = get_collection(company_id)
+    result = collection.get(include=["metadatas"])
+    seen = {}
+    for meta in result["metadatas"]:
+        src = meta.get("source", "unknown")
+        seen[src] = seen.get(src, 0) + 1
+    return [{"name": name, "chunks": count} for name, count in seen.items()]
+
+def delete_document(company_id: int, doc_name: str):
+    collection = get_collection(company_id)
+    result = collection.get(where={"source": doc_name}, include=["metadatas"])
+    if not result["ids"]:
+        raise ValueError(f"'{doc_name}' 문서를 찾을 수 없습니다.")
+    collection.delete(ids=result["ids"])
+
 def search(company_id: int, query: str, top_k: int = 5) -> list[str]:
     collection = get_collection(company_id)
     query_embedding = embed([query])[0]
