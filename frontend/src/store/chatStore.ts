@@ -6,7 +6,9 @@ interface ChatStore {
   currentConversationId: string | null;
   messages: Message[];
   isLoading: boolean;
-  setCurrentConversation: (id: string) => void;
+  setConversations: (convs: Conversation[]) => void;
+  addConversation: (conv: Conversation) => void;
+  setCurrentConversation: (id: string | null) => void;
   addMessage: (msg: Message) => void;
   setMessages: (msgs: Message[]) => void;
   setLoading: (v: boolean) => void;
@@ -18,6 +20,8 @@ export const useChatStore = create<ChatStore>((set) => ({
   currentConversationId: null,
   messages: [],
   isLoading: false,
+  setConversations: (convs) => set({ conversations: convs }),
+  addConversation: (conv) => set((s) => ({ conversations: [conv, ...s.conversations] })),
   setCurrentConversation: (id) => set({ currentConversationId: id }),
   addMessage: (msg) => set((s) => ({ messages: [...s.messages, msg] })),
   setMessages: (msgs) => set({ messages: msgs }),

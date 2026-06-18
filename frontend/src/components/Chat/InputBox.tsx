@@ -6,7 +6,7 @@ import styles from './InputBox.module.css';
 
 export default function InputBox() {
   const [text, setText] = useState('');
-  const { isLoading, addMessage, setLoading, currentConversationId } = useChatStore();
+  const { isLoading, addMessage, setLoading, currentConversationId, setCurrentConversation, addConversation } = useChatStore();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSubmit = async () => {
@@ -34,6 +34,16 @@ export default function InputBox() {
         created_at: res.created_at,
       };
       addMessage(assistantMsg);
+
+      // 새 대화였으면 conversation_id 세팅 + 사이드바 목록에 추가
+      if (!currentConversationId) {
+        setCurrentConversation(res.conversation_id);
+        addConversation({
+          id: res.conversation_id,
+          title: content.slice(0, 30),
+          created_at: res.created_at,
+        });
+      }
     } finally {
       setLoading(false);
     }
