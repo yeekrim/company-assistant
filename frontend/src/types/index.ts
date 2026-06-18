@@ -4,6 +4,7 @@ export interface User {
   name: string;
   role: 'admin' | 'employee';
   company_id: number;
+  company_name: string;
 }
 
 export interface AuthState {
