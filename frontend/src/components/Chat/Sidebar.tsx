@@ -89,7 +89,7 @@ export default function Sidebar() {
   return (
     <aside className={styles.sidebar}>
       <div className={styles.top}>
-        <div className={styles.logo}>AI 어시스턴트</div>
+        <div className={styles.logo}>{user?.company_name ?? 'AI'} 어시스턴트</div>
         <button className={styles.newChat} onClick={startNewConversation}>+ 새 대화</button>
       </div>
 

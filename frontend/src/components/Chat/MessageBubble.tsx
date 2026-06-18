@@ -12,7 +12,7 @@ export default function MessageBubble({ message }: { message: Message }) {
         <div className={styles.avatar}>AI</div>
       )}
       <div className={`${styles.bubble} ${isUser ? styles.userBubble : styles.assistantBubble}`}>
-        {!isUser && <span className={styles.senderName}>AI 어시스턴트</span>}
+        {!isUser && <span className={styles.senderName}>{user?.company_name ?? 'AI'} 어시스턴트</span>}
         <p className={styles.content}>{message.content}</p>
       </div>
       {isUser && (
