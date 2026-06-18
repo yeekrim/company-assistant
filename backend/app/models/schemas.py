@@ -1,19 +1,21 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 from datetime import datetime
 
 class LoginRequest(BaseModel):
     email: str
     password: str
 
-class TokenResponse(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
-    user: "UserResponse"
-
 class UserResponse(BaseModel):
     id: int
     email: str
     name: str
+    role: str
+    company_id: int
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserResponse
 
 class MessageResponse(BaseModel):
     id: int

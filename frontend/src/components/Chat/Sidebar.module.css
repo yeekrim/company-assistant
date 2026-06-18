@@ -1,0 +1,138 @@
+.sidebar {
+  width: 260px;
+  min-width: 260px;
+  height: 100vh;
+  background: #1e293b;
+  border-right: 1px solid #334155;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.top {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.logo {
+  font-size: 16px;
+  font-weight: 700;
+  color: #f1f5f9;
+  padding: 4px 0;
+}
+
+.newChat {
+  padding: 10px;
+  background: #6366f1;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.newChat:hover { opacity: 0.85; }
+
+.middle {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.empty {
+  font-size: 13px;
+  color: #475569;
+  text-align: center;
+  margin-top: 24px;
+}
+
+.bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-top: 1px solid #334155;
+  padding-top: 16px;
+}
+
+.uploadSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.uploadLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+.uploadBtn {
+  padding: 10px;
+  background: #0f172a;
+  border: 1px dashed #6366f1;
+  border-radius: 8px;
+  color: #a5b4fc;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.uploadBtn:hover { background: rgba(99, 102, 241, 0.1); }
+
+.userInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.userMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.userName {
+  font-size: 14px;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+.adminBadge {
+  font-size: 11px;
+  font-weight: 600;
+  color: #a5b4fc;
+  background: rgba(99, 102, 241, 0.2);
+  border: 1px solid rgba(99, 102, 241, 0.4);
+  border-radius: 4px;
+  padding: 1px 6px;
+}
+
+.userEmail {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.logoutBtn {
+  margin-top: 4px;
+  padding: 8px;
+  background: transparent;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  color: #94a3b8;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.logoutBtn:hover {
+  border-color: #f87171;
+  color: #f87171;
+}
