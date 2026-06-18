@@ -52,6 +52,39 @@
   margin-top: 24px;
 }
 
+.convList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.convItem {
+  padding: 9px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.convItem:hover {
+  background: #e8e2d9;
+}
+
+.convItemActive {
+  background: rgba(91, 155, 213, 0.12);
+}
+
+.convTitle {
+  font-size: 13px;
+  color: #4a4239;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .bottom {
   display: flex;
   flex-direction: column;
