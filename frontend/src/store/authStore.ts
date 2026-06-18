@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { User } from '../types';
+import { useChatStore } from './chatStore';
 
 interface AuthStore {
   user: User | null;
@@ -17,7 +18,11 @@ export const useAuthStore = create<AuthStore>()(
       token: null,
       isAuthenticated: false,
       login: (token, user) => set({ token, user, isAuthenticated: true }),
-      logout: () => set({ token: null, user: null, isAuthenticated: false }),
+      logout: () => {
+        useChatStore.getState().startNewConversation();
+        useChatStore.getState().setConversations([]);
+        set({ token: null, user: null, isAuthenticated: false });
+      },
     }),
     { name: 'auth-storage' }
   )
