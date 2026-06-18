@@ -91,21 +91,22 @@ async def chat(
         db.add(conversation)
         await db.flush()
 
+    user_time = datetime.utcnow()
     user_msg = Message(
         conversation_id=conversation.id,
         role="user",
         content=data.message,
+        created_at=user_time,
     )
     db.add(user_msg)
 
     answer = await rag_run(current_user.company_id, data.message)
 
-    now = datetime.utcnow()
     assistant_msg = Message(
         conversation_id=conversation.id,
         role="assistant",
         content=answer,
-        created_at=now,
+        created_at=datetime.utcnow(),
     )
     db.add(assistant_msg)
     await db.commit()
@@ -114,6 +115,6 @@ async def chat(
         id=str(assistant_msg.id),
         role="assistant",
         content=answer,
-        created_at=now.isoformat(),
+        created_at=assistant_msg.created_at.isoformat(),
         conversation_id=str(conversation.id),
     )
