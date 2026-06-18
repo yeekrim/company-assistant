@@ -1,17 +1,26 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
+import { documentApi } from '../../services/api';
 import styles from './Sidebar.module.css';
 
 export default function Sidebar() {
   const { user, logout } = useAuthStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
 
-  const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    // TODO: 파일을 백엔드로 전송 (RAG 파이프라인 연동)
-    alert(`"${file.name}" 업로드 준비됨 (백엔드 연동 예정)`);
     e.target.value = '';
+    setUploading(true);
+    try {
+      await documentApi.upload(file);
+      alert(`"${file.name}" 업로드 완료`);
+    } catch {
+      alert('업로드 실패. 다시 시도해주세요.');
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
@@ -33,8 +42,9 @@ export default function Sidebar() {
             <button
               className={styles.uploadBtn}
               onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
             >
-              📄 문서 업로드
+              {uploading ? '업로드 중...' : '📄 문서 업로드'}
             </button>
             <input
               ref={fileInputRef}
