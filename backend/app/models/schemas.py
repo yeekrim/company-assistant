@@ -31,3 +31,10 @@ class ConversationResponse(BaseModel):
 class ChatRequest(BaseModel):
     conversation_id: int | None = None
     message: str
+
+class ChatResponse(BaseModel):
+    id: str
+    role: str
+    content: str
+    created_at: str
+    conversation_id: str
