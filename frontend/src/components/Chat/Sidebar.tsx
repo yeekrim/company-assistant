@@ -14,6 +14,7 @@ export default function Sidebar() {
   const {
     conversations, currentConversationId,
     setConversations, setCurrentConversation, setMessages, startNewConversation,
+    removeConversation,
   } = useChatStore();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -21,6 +22,7 @@ export default function Sidebar() {
   const [docs, setDocs] = useState<Doc[]>([]);
   const [deletingDoc, setDeletingDoc] = useState<string | null>(null);
   const [loadingConv, setLoadingConv] = useState<string | null>(null);
+  const [deletingConv, setDeletingConv] = useState<string | null>(null);
 
   const loadDocs = useCallback(async () => {
     if (user?.role !== 'admin') return;
@@ -29,18 +31,14 @@ export default function Sidebar() {
     } catch {}
   }, [user?.role]);
 
-  useEffect(() => {
-    loadDocs();
-  }, [loadDocs]);
+  useEffect(() => { loadDocs(); }, [loadDocs]);
 
   useEffect(() => {
-    chatApi.listConversations()
-      .then(setConversations)
-      .catch(() => {});
+    chatApi.listConversations().then(setConversations).catch(() => {});
   }, [setConversations]);
 
   const handleSelectConversation = async (id: string) => {
-    if (id === currentConversationId) return;
+    if (id === currentConversationId || loadingConv) return;
     setLoadingConv(id);
     try {
       const msgs = await chatApi.getMessages(id);
@@ -50,6 +48,20 @@ export default function Sidebar() {
       alert('대화를 불러오지 못했습니다.');
     } finally {
       setLoadingConv(null);
+    }
+  };
+
+  const handleDeleteConversation = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    setDeletingConv(id);
+    try {
+      await chatApi.deleteConversation(id);
+      removeConversation(id);
+      if (currentConversationId === id) startNewConversation();
+    } catch {
+      alert('삭제 실패. 다시 시도해주세요.');
+    } finally {
+      setDeletingConv(null);
     }
   };
 
@@ -73,7 +85,7 @@ export default function Sidebar() {
     }
   };
 
-  const handleDelete = async (docName: string) => {
+  const handleDeleteDoc = async (docName: string) => {
     if (!confirm(`"${docName}" 문서를 삭제할까요?`)) return;
     setDeletingDoc(docName);
     try {
@@ -104,11 +116,17 @@ export default function Sidebar() {
                 className={`${styles.convItem} ${conv.id === currentConversationId ? styles.convItemActive : ''}`}
                 onClick={() => handleSelectConversation(conv.id)}
               >
-                {loadingConv === conv.id ? (
-                  <span className={styles.convTitle}>불러오는 중...</span>
-                ) : (
-                  <span className={styles.convTitle}>{conv.title}</span>
-                )}
+                <span className={styles.convTitle}>
+                  {loadingConv === conv.id ? '불러오는 중...' : conv.title}
+                </span>
+                <button
+                  className={styles.convDeleteBtn}
+                  onClick={(e) => handleDeleteConversation(e, conv.id)}
+                  disabled={deletingConv === conv.id}
+                  title="대화 삭제"
+                >
+                  {deletingConv === conv.id ? '…' : '✕'}
+                </button>
               </li>
             ))}
           </ul>
@@ -126,7 +144,7 @@ export default function Sidebar() {
                     <span className={styles.docName} title={doc.name}>📄 {doc.name}</span>
                     <button
                       className={styles.deleteBtn}
-                      onClick={() => handleDelete(doc.name)}
+                      onClick={() => handleDeleteDoc(doc.name)}
                       disabled={deletingDoc === doc.name}
                       title="삭제"
                     >
