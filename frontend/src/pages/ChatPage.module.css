@@ -1,14 +1,17 @@
 .layout {
   display: flex;
   height: 100vh;
-  background: #faf9f7;
-  overflow: hidden;
+  background: #0f172a;
 }
 
-.chatArea {
+.main {
   flex: 1;
   display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  background: #faf9f7;
+  align-items: center;
+  justify-content: center;
+}
+
+.placeholder {
+  color: #475569;
+  font-size: 15px;
 }
