@@ -1,7 +1,7 @@
 .layout {
   display: flex;
   height: 100vh;
-  background: #0f172a;
+  background: #faf9f7;
 }
 
 .main {
@@ -9,9 +9,4 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-}
-
-.placeholder {
-  color: #475569;
-  font-size: 15px;
 }
