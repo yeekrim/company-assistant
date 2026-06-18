@@ -3,15 +3,32 @@ from sqlalchemy import String, DateTime, ForeignKey, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 
+
+class Company(Base):
+    __tablename__ = "companies"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(100), unique=True)
+    email_domain: Mapped[str] = mapped_column(String(100), unique=True)
+    employee_id_prefix: Mapped[str] = mapped_column(String(10))
+    employee_id_length: Mapped[int] = mapped_column()
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    users: Mapped[list["User"]] = relationship(back_populates="company")
+
+
 class User(Base):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    company_id: Mapped[int] = mapped_column(ForeignKey("companies.id"))
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     name: Mapped[str] = mapped_column(String(100))
     hashed_password: Mapped[str] = mapped_column(String(255))
+    role: Mapped[str] = mapped_column(String(20), default="employee")  # admin | employee
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
+    company: Mapped["Company"] = relationship(back_populates="users")
     conversations: Mapped[list["Conversation"]] = relationship(back_populates="user")
 
 
