@@ -126,7 +126,7 @@
   cursor: pointer;
   text-align: left;
   transition: background 0.15s, border-color 0.15s;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .docMgrBtn:hover {
@@ -139,7 +139,7 @@
   flex-direction: column;
   gap: 4px;
   border-top: 1px solid #e8e2d9;
-  padding-top: 14px;
+  padding-top: 12px;
 }
 
 .userInfo {
@@ -179,9 +179,9 @@
   margin-top: 4px;
   padding: 8px;
   background: transparent;
-  border: 1px solid #e8e2d9;
+  border: 1px solid #f4a8a8;
   border-radius: 8px;
-  color: #b5aca2;
+  color: #e57373;
   font-size: 13px;
   cursor: pointer;
   transition: all 0.2s;
