@@ -2,6 +2,8 @@ export interface User {
   id: string;
   email: string;
   name: string;
+  role: 'admin' | 'employee';
+  company_id: number;
 }
 
 export interface AuthState {
