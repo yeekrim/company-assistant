@@ -2,12 +2,8 @@ export interface User {
   id: string;
   email: string;
   name: string;
-}
-
-export interface AuthState {
-  user: User | null;
-  token: string | null;
-  isAuthenticated: boolean;
+  role: 'admin' | 'employee';
+  company_id: number;
 }
 
 export interface LoginRequest {
@@ -19,4 +15,17 @@ export interface LoginResponse {
   access_token: string;
   token_type: string;
   user: User;
+}
+
+export interface Message {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  created_at: string;
+}
+
+export interface Conversation {
+  id: string;
+  title: string;
+  created_at: string;
 }
