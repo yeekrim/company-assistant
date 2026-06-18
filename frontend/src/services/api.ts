@@ -34,8 +34,18 @@ export const chatApi = {
   sendMessage: async (
     query: string,
     conversationId?: string
-  ): Promise<{ id: string; content: string; created_at: string }> => {
-    const res = await api.post('/api/chat', { message: query, conversation_id: conversationId ?? null });
+  ): Promise<{ id: string; content: string; created_at: string; conversation_id: string }> => {
+    const res = await api.post('/api/chat', { message: query, conversation_id: conversationId ? Number(conversationId) : null });
+    return res.data;
+  },
+
+  listConversations: async (): Promise<{ id: string; title: string; created_at: string }[]> => {
+    const res = await api.get('/api/chat/conversations');
+    return res.data;
+  },
+
+  getMessages: async (conversationId: string): Promise<{ id: string; role: string; content: string; created_at: string }[]> => {
+    const res = await api.get(`/api/chat/conversations/${conversationId}/messages`);
     return res.data;
   },
 };
