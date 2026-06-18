@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.core.database import get_db
 from app.core.security import verify_password, create_access_token
-from app.models.db_models import User
+from app.models.db_models import User, Company
 from app.models.schemas import LoginRequest, TokenResponse, UserResponse
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
@@ -16,6 +16,9 @@ async def login(data: LoginRequest, db: AsyncSession = Depends(get_db)):
     if not user or not verify_password(data.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="이메일 또는 비밀번호가 올바르지 않습니다.")
 
+    company_result = await db.execute(select(Company).where(Company.id == user.company_id))
+    company = company_result.scalar_one()
+
     token = create_access_token({"sub": str(user.id)})
     return TokenResponse(
         access_token=token,
@@ -25,5 +28,6 @@ async def login(data: LoginRequest, db: AsyncSession = Depends(get_db)):
             name=user.name,
             role=user.role,
             company_id=user.company_id,
+            company_name=company.name,
         ),
     )
