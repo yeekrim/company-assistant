@@ -117,97 +117,28 @@
 .bottom {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   border-top: 1px solid #e8e2d9;
-  padding-top: 16px;
+  padding-top: 14px;
 }
 
-.uploadSection {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.uploadLabel {
-  font-size: 11px;
-  font-weight: 600;
-  color: #b5aca2;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin: 0;
-}
-
-.docList {
-  list-style: none;
-  margin: 0 0 8px;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  max-height: 180px;
-  overflow-y: auto;
-}
-
-.docItem {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  padding: 6px 8px;
+.docMgrBtn {
+  width: 100%;
+  padding: 9px 12px;
   background: #faf9f7;
   border: 1px solid #e8e2d9;
-  border-radius: 6px;
-  font-size: 12px;
-}
-
-.docName {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: #6b6259;
-}
-
-.deleteBtn {
-  flex-shrink: 0;
-  width: 20px;
-  height: 20px;
-  border: none;
-  background: transparent;
-  color: #b5aca2;
-  font-size: 11px;
-  cursor: pointer;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 0.15s, background 0.15s;
-}
-
-.deleteBtn:hover:not(:disabled) {
-  color: #e57373;
-  background: rgba(229, 115, 115, 0.1);
-}
-
-.uploadBtn {
-  padding: 10px;
-  background: #faf9f7;
-  border: 1px dashed #5b9bd5;
   border-radius: 8px;
-  color: #5b9bd5;
+  color: #6b6259;
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.2s;
+  text-align: left;
+  transition: background 0.15s, border-color 0.15s;
 }
 
-.uploadBtn:hover:not(:disabled) {
-  background: rgba(91, 155, 213, 0.08);
-}
-
-.uploadBtn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.docMgrBtn:hover {
+  background: #e8e2d9;
+  border-color: #d4cdc5;
 }
 
 .userInfo {
