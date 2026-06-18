@@ -1,4 +1,6 @@
 import Sidebar from '../components/Chat/Sidebar';
+import ChatWindow from '../components/Chat/ChatWindow';
+import InputBox from '../components/Chat/InputBox';
 import styles from './ChatPage.module.css';
 
 export default function ChatPage() {
@@ -6,9 +8,8 @@ export default function ChatPage() {
     <div className={styles.layout}>
       <Sidebar />
       <main className={styles.main}>
-        <div className={styles.placeholder}>
-          <p>채팅 화면 구현 예정</p>
-        </div>
+        <ChatWindow />
+        <InputBox />
       </main>
     </div>
   );
