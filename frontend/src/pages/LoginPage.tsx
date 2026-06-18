@@ -32,7 +32,7 @@ export default function LoginPage() {
       <div className={styles.card}>
         <div className={styles.logo}>
           <div className={styles.logoIcon}>AI</div>
-          <h1 className={styles.title}>사내 AI 어시스턴트</h1>
+          <h1 className={styles.title}>Company Assistant</h1>
           <p className={styles.subtitle}>업무 지식을 기반으로 빠른 답변을 드립니다</p>
         </div>
 
@@ -43,7 +43,7 @@ export default function LoginPage() {
               id="email"
               type="email"
               className={styles.input}
-              placeholder="name@company.com"
+              placeholder="사내 이메일"
               value={form.email}
               onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
               required
@@ -57,7 +57,7 @@ export default function LoginPage() {
               id="password"
               type="password"
               className={styles.input}
-              placeholder="비밀번호를 입력하세요"
+              placeholder="비밀번호"
               value={form.password}
               onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
               required
