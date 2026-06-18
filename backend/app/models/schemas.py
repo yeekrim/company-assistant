@@ -14,6 +14,8 @@ class UserResponse(BaseModel):
     id: int
     email: str
     name: str
+    role: str
+    company_id: int
 
 class MessageResponse(BaseModel):
     id: int

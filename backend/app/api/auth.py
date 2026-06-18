@@ -19,5 +19,11 @@ async def login(data: LoginRequest, db: AsyncSession = Depends(get_db)):
     token = create_access_token({"sub": str(user.id)})
     return TokenResponse(
         access_token=token,
-        user=UserResponse(id=user.id, email=user.email, name=user.name),
+        user=UserResponse(
+            id=user.id,
+            email=user.email,
+            name=user.name,
+            role=user.role,
+            company_id=user.company_id,
+        ),
     )
