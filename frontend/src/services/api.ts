@@ -48,6 +48,10 @@ export const chatApi = {
     const res = await api.get(`/api/chat/conversations/${conversationId}/messages`);
     return res.data;
   },
+
+  deleteConversation: async (conversationId: string): Promise<void> => {
+    await api.delete(`/api/chat/conversations/${conversationId}`);
+  },
 };
 
 export const documentApi = {

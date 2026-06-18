@@ -1,7 +1,7 @@
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from app.core.database import get_db
 from app.core.security import decode_token
 from app.models.db_models import User, Conversation, Message
@@ -118,3 +118,24 @@ async def chat(
         created_at=assistant_msg.created_at.isoformat(),
         conversation_id=str(conversation.id),
     )
+
+@router.delete("/conversations/{conversation_id}")
+async def delete_conversation(
+    conversation_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(
+        select(Conversation).where(
+            Conversation.id == conversation_id,
+            Conversation.user_id == current_user.id,
+        )
+    )
+    conversation = result.scalar_one_or_none()
+    if not conversation:
+        raise HTTPException(status_code=404, detail="대화를 찾을 수 없습니다.")
+
+    await db.execute(delete(Message).where(Message.conversation_id == conversation_id))
+    await db.delete(conversation)
+    await db.commit()
+    return {"message": "삭제 완료"}
