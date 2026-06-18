@@ -41,13 +41,22 @@ export const chatApi = {
 };
 
 export const documentApi = {
-  upload: async (file: File): Promise<{ message: string }> => {
+  upload: async (files: File[]): Promise<{ uploaded: { file: string }[]; errors: { file: string; error: string }[] }> => {
     const formData = new FormData();
-    formData.append('file', file);
+    files.forEach((f) => formData.append('files', f));
     const res = await api.post('/api/documents/upload', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
     return res.data;
+  },
+
+  list: async (): Promise<{ name: string; chunks: number }[]> => {
+    const res = await api.get('/api/documents');
+    return res.data.documents;
+  },
+
+  delete: async (docName: string): Promise<void> => {
+    await api.delete(`/api/documents/${encodeURIComponent(docName)}`);
   },
 };
 

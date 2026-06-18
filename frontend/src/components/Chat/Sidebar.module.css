@@ -75,6 +75,58 @@
   margin: 0;
 }
 
+.docList {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.docItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 6px 8px;
+  background: #faf9f7;
+  border: 1px solid #e8e2d9;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.docName {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #6b6259;
+}
+
+.deleteBtn {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: transparent;
+  color: #b5aca2;
+  font-size: 11px;
+  cursor: pointer;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, background 0.15s;
+}
+
+.deleteBtn:hover:not(:disabled) {
+  color: #e57373;
+  background: rgba(229, 115, 115, 0.1);
+}
+
 .uploadBtn {
   padding: 10px;
   background: #faf9f7;
