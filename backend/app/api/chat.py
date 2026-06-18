@@ -27,13 +27,55 @@ async def get_current_user(
         raise HTTPException(status_code=401, detail="사용자를 찾을 수 없습니다.")
     return user
 
-@router.post("", response_model=ChatResponse)
+@router.get("/conversations")
+async def list_conversations(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(
+        select(Conversation)
+        .where(Conversation.user_id == current_user.id)
+        .order_by(Conversation.created_at.desc())
+    )
+    conversations = result.scalars().all()
+    return [
+        {"id": str(c.id), "title": c.title, "created_at": c.created_at.isoformat()}
+        for c in conversations
+    ]
+
+@router.get("/conversations/{conversation_id}/messages")
+async def get_messages(
+    conversation_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    conv_result = await db.execute(
+        select(Conversation).where(
+            Conversation.id == conversation_id,
+            Conversation.user_id == current_user.id,
+        )
+    )
+    conversation = conv_result.scalar_one_or_none()
+    if not conversation:
+        raise HTTPException(status_code=404, detail="대화를 찾을 수 없습니다.")
+
+    msg_result = await db.execute(
+        select(Message)
+        .where(Message.conversation_id == conversation_id)
+        .order_by(Message.created_at.asc())
+    )
+    messages = msg_result.scalars().all()
+    return [
+        {"id": str(m.id), "role": m.role, "content": m.content, "created_at": m.created_at.isoformat()}
+        for m in messages
+    ]
+
+@router.post("")
 async def chat(
     data: ChatRequest,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    # 대화 생성 또는 조회
     if data.conversation_id:
         result = await db.execute(
             select(Conversation).where(
@@ -49,7 +91,6 @@ async def chat(
         db.add(conversation)
         await db.flush()
 
-    # 사용자 메시지 저장
     user_msg = Message(
         conversation_id=conversation.id,
         role="user",
@@ -57,10 +98,8 @@ async def chat(
     )
     db.add(user_msg)
 
-    # RAG 파이프라인 실행
     answer = await rag_run(current_user.company_id, data.message)
 
-    # 어시스턴트 메시지 저장
     now = datetime.utcnow()
     assistant_msg = Message(
         conversation_id=conversation.id,

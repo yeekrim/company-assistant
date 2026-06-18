@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { useAuthStore } from '../../store/authStore';
-import { documentApi } from '../../services/api';
+import { useChatStore } from '../../store/chatStore';
+import { documentApi, chatApi } from '../../services/api';
 import styles from './Sidebar.module.css';
 
 interface Doc {
@@ -10,24 +11,47 @@ interface Doc {
 
 export default function Sidebar() {
   const { user, logout } = useAuthStore();
+  const {
+    conversations, currentConversationId,
+    setConversations, setCurrentConversation, setMessages, startNewConversation,
+  } = useChatStore();
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [docs, setDocs] = useState<Doc[]>([]);
   const [deletingDoc, setDeletingDoc] = useState<string | null>(null);
+  const [loadingConv, setLoadingConv] = useState<string | null>(null);
 
   const loadDocs = useCallback(async () => {
     if (user?.role !== 'admin') return;
     try {
-      const list = await documentApi.list();
-      setDocs(list);
-    } catch {
-      // ChromaDB 연결 실패 등 무시
-    }
+      setDocs(await documentApi.list());
+    } catch {}
   }, [user?.role]);
 
   useEffect(() => {
     loadDocs();
   }, [loadDocs]);
+
+  useEffect(() => {
+    chatApi.listConversations()
+      .then(setConversations)
+      .catch(() => {});
+  }, [setConversations]);
+
+  const handleSelectConversation = async (id: string) => {
+    if (id === currentConversationId) return;
+    setLoadingConv(id);
+    try {
+      const msgs = await chatApi.getMessages(id);
+      setCurrentConversation(id);
+      setMessages(msgs.map((m) => ({ ...m, role: m.role as 'user' | 'assistant' })));
+    } catch {
+      alert('대화를 불러오지 못했습니다.');
+    } finally {
+      setLoadingConv(null);
+    }
+  };
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
@@ -37,8 +61,7 @@ export default function Sidebar() {
     try {
       const res = await documentApi.upload(files);
       if (res.errors.length > 0) {
-        const errNames = res.errors.map((e) => e.file).join(', ');
-        alert(`업로드 실패: ${errNames}`);
+        alert(`업로드 실패: ${res.errors.map((e) => e.file).join(', ')}`);
       } else {
         alert(`${res.uploaded.length}개 파일 업로드 완료`);
       }
@@ -67,25 +90,40 @@ export default function Sidebar() {
     <aside className={styles.sidebar}>
       <div className={styles.top}>
         <div className={styles.logo}>AI 어시스턴트</div>
-        <button className={styles.newChat}>+ 새 대화</button>
+        <button className={styles.newChat} onClick={startNewConversation}>+ 새 대화</button>
       </div>
 
       <div className={styles.middle}>
-        <p className={styles.empty}>대화 내역이 없습니다</p>
+        {conversations.length === 0 ? (
+          <p className={styles.empty}>대화 내역이 없습니다</p>
+        ) : (
+          <ul className={styles.convList}>
+            {conversations.map((conv) => (
+              <li
+                key={conv.id}
+                className={`${styles.convItem} ${conv.id === currentConversationId ? styles.convItemActive : ''}`}
+                onClick={() => handleSelectConversation(conv.id)}
+              >
+                {loadingConv === conv.id ? (
+                  <span className={styles.convTitle}>불러오는 중...</span>
+                ) : (
+                  <span className={styles.convTitle}>{conv.title}</span>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       <div className={styles.bottom}>
         {user?.role === 'admin' && (
           <div className={styles.uploadSection}>
             <p className={styles.uploadLabel}>사내 문서 관리</p>
-
             {docs.length > 0 && (
               <ul className={styles.docList}>
                 {docs.map((doc) => (
                   <li key={doc.name} className={styles.docItem}>
-                    <span className={styles.docName} title={doc.name}>
-                      📄 {doc.name}
-                    </span>
+                    <span className={styles.docName} title={doc.name}>📄 {doc.name}</span>
                     <button
                       className={styles.deleteBtn}
                       onClick={() => handleDelete(doc.name)}
@@ -98,7 +136,6 @@ export default function Sidebar() {
                 ))}
               </ul>
             )}
-
             <button
               className={styles.uploadBtn}
               onClick={() => fileInputRef.current?.click()}
