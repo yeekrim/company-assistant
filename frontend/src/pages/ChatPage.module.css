@@ -1,0 +1,17 @@
+.layout {
+  display: flex;
+  height: 100vh;
+  background: #0f172a;
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.placeholder {
+  color: #475569;
+  font-size: 15px;
+}
