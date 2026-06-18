@@ -6,7 +6,7 @@
   border-right: 1px solid #e8e2d9;
   display: flex;
   flex-direction: column;
-  padding: 16px;
+  padding: 16px 16px 20px;
   box-sizing: border-box;
 }
 
@@ -114,14 +114,6 @@
   background: rgba(229, 115, 115, 0.12);
 }
 
-.bottom {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  border-top: 1px solid #e8e2d9;
-  padding-top: 14px;
-}
-
 .docMgrBtn {
   width: 100%;
   padding: 9px 12px;
@@ -134,11 +126,20 @@
   cursor: pointer;
   text-align: left;
   transition: background 0.15s, border-color 0.15s;
+  margin-bottom: 10px;
 }
 
 .docMgrBtn:hover {
   background: #e8e2d9;
   border-color: #d4cdc5;
+}
+
+.bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-top: 1px solid #e8e2d9;
+  padding-top: 12px;
 }
 
 .userInfo {
@@ -178,9 +179,9 @@
   margin-top: 4px;
   padding: 8px;
   background: transparent;
-  border: 1px solid #e8e2d9;
+  border: 1px solid #f4a8a8;
   border-radius: 8px;
-  color: #b5aca2;
+  color: #e57373;
   font-size: 13px;
   cursor: pointer;
   transition: all 0.2s;

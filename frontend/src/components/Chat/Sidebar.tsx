@@ -85,12 +85,13 @@ export default function Sidebar() {
           )}
         </div>
 
+        {user?.role === 'admin' && (
+          <button className={styles.docMgrBtn} onClick={() => setShowDocModal(true)}>
+            📄 사내 문서 관리
+          </button>
+        )}
+
         <div className={styles.bottom}>
-          {user?.role === 'admin' && (
-            <button className={styles.docMgrBtn} onClick={() => setShowDocModal(true)}>
-              📄 사내 문서 관리
-            </button>
-          )}
           <div className={styles.userInfo}>
             <div className={styles.userMeta}>
               <span className={styles.userName}>{user?.name}</span>
