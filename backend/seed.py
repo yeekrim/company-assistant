@@ -16,7 +16,7 @@ COMPANIES = [
         "employee_id_prefix": "018",
         "employee_id_length": 9,
         "users": [
-            {"name": "김민준", "employee_id": "018100001", "role": "admin"},
+            {"name": "이경림", "employee_id": "admin", "role": "admin"},
             {"name": "이서연", "employee_id": "018100002", "role": "employee"},
             {"name": "박지호", "employee_id": "018100003", "role": "employee"},
             {"name": "최유나", "employee_id": "018100004", "role": "employee"},
