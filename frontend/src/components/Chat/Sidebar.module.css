@@ -2,8 +2,8 @@
   width: 260px;
   min-width: 260px;
   height: 100vh;
-  background: #1e293b;
-  border-right: 1px solid #334155;
+  background: #f0ece6;
+  border-right: 1px solid #e8e2d9;
   display: flex;
   flex-direction: column;
   padding: 16px;
@@ -20,13 +20,13 @@
 .logo {
   font-size: 16px;
   font-weight: 700;
-  color: #f1f5f9;
+  color: #2c2825;
   padding: 4px 0;
 }
 
 .newChat {
   padding: 10px;
-  background: #6366f1;
+  background: #5b9bd5;
   border: none;
   border-radius: 8px;
   color: white;
@@ -47,7 +47,7 @@
 
 .empty {
   font-size: 13px;
-  color: #475569;
+  color: #b5aca2;
   text-align: center;
   margin-top: 24px;
 }
@@ -56,7 +56,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  border-top: 1px solid #334155;
+  border-top: 1px solid #e8e2d9;
   padding-top: 16px;
 }
 
@@ -69,7 +69,7 @@
 .uploadLabel {
   font-size: 11px;
   font-weight: 600;
-  color: #64748b;
+  color: #b5aca2;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin: 0;
@@ -77,18 +77,23 @@
 
 .uploadBtn {
   padding: 10px;
-  background: #0f172a;
-  border: 1px dashed #6366f1;
+  background: #faf9f7;
+  border: 1px dashed #5b9bd5;
   border-radius: 8px;
-  color: #a5b4fc;
+  color: #5b9bd5;
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   transition: background 0.2s;
 }
 
-.uploadBtn:hover {
-  background: rgba(99, 102, 241, 0.1);
+.uploadBtn:hover:not(:disabled) {
+  background: rgba(91, 155, 213, 0.08);
+}
+
+.uploadBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .userInfo {
@@ -106,37 +111,37 @@
 .userName {
   font-size: 14px;
   font-weight: 600;
-  color: #f1f5f9;
+  color: #2c2825;
 }
 
 .adminBadge {
   font-size: 11px;
   font-weight: 600;
-  color: #a5b4fc;
-  background: rgba(99, 102, 241, 0.2);
-  border: 1px solid rgba(99, 102, 241, 0.4);
+  color: #5b9bd5;
+  background: rgba(91, 155, 213, 0.12);
+  border: 1px solid rgba(91, 155, 213, 0.3);
   border-radius: 4px;
   padding: 1px 6px;
 }
 
 .userEmail {
   font-size: 12px;
-  color: #64748b;
+  color: #b5aca2;
 }
 
 .logoutBtn {
   margin-top: 4px;
   padding: 8px;
   background: transparent;
-  border: 1px solid #334155;
+  border: 1px solid #e8e2d9;
   border-radius: 8px;
-  color: #94a3b8;
+  color: #b5aca2;
   font-size: 13px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .logoutBtn:hover {
-  border-color: #f87171;
-  color: #f87171;
+  border-color: #e57373;
+  color: #e57373;
 }

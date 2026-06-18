@@ -24,27 +24,30 @@ api.interceptors.response.use(
   }
 );
 
-const DEV_ACCOUNTS: Record<string, { password: string; name: string; role: 'admin' | 'employee'; company_id: number }> = {
-  '018100001@virtual.co.kr': { password: 'pass1234', name: '김민준', role: 'admin', company_id: 1 },
-  '018100002@virtual.co.kr': { password: 'pass1234', name: '이서연', role: 'employee', company_id: 1 },
-  '1021000001@repo.com':     { password: 'pass1234', name: '한소희', role: 'admin', company_id: 2 },
-  '1021000002@repo.com':     { password: 'pass1234', name: '오태양', role: 'employee', company_id: 2 },
-};
-
 export const authApi = {
   login: async (data: LoginRequest): Promise<LoginResponse> => {
-    if (import.meta.env.DEV) {
-      const account = DEV_ACCOUNTS[data.email];
-      if (account && account.password === data.password) {
-        return {
-          access_token: 'dev-token',
-          token_type: 'bearer',
-          user: { id: '1', email: data.email, name: account.name, role: account.role, company_id: account.company_id },
-        };
-      }
-      throw { response: { status: 401 } };
-    }
     return api.post<LoginResponse>('/api/auth/login', data).then((r) => r.data);
+  },
+};
+
+export const chatApi = {
+  sendMessage: async (
+    query: string,
+    conversationId?: string
+  ): Promise<{ id: string; content: string; created_at: string }> => {
+    const res = await api.post('/api/chat', { message: query, conversation_id: conversationId ?? null });
+    return res.data;
+  },
+};
+
+export const documentApi = {
+  upload: async (file: File): Promise<{ message: string }> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await api.post('/api/documents/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return res.data;
   },
 };
 
