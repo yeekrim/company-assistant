@@ -1,0 +1,117 @@
+<svg viewBox="0 0 900 620" xmlns="http://www.w3.org/2000/svg" role="img" font-family="'Segoe UI', system-ui, sans-serif">
+  <title>Company Assistant 시스템 아키텍처</title>
+  <desc>RAG 기반 사내 AI 챗봇의 전체 시스템 구조도</desc>
+
+  <!-- Background -->
+  <rect width="900" height="620" fill="#faf9f7" rx="16"/>
+
+  <!-- ── FRONTEND ── -->
+  <rect x="30" y="20" width="840" height="160" rx="12" fill="#eef4fb" stroke="#5b9bd5" stroke-width="1.5"/>
+  <text x="50" y="44" font-size="11" font-weight="700" fill="#5b9bd5" letter-spacing="1">FRONTEND · React + TypeScript</text>
+
+  <rect x="50" y="55" width="160" height="110" rx="8" fill="#fff" stroke="#c8ddf0" stroke-width="1.2"/>
+  <text x="130" y="78" text-anchor="middle" font-size="12" font-weight="700" fill="#2c2825">Sidebar</text>
+  <text x="130" y="97" text-anchor="middle" font-size="10" fill="#7a6f65">대화 목록</text>
+  <text x="130" y="112" text-anchor="middle" font-size="10" fill="#7a6f65">문서 관리 (admin)</text>
+  <text x="130" y="127" text-anchor="middle" font-size="10" fill="#7a6f65">프로필 / 로그아웃</text>
+  <text x="130" y="142" text-anchor="middle" font-size="10" fill="#7a6f65">회사명 어시스턴트</text>
+
+  <rect x="240" y="55" width="200" height="110" rx="8" fill="#fff" stroke="#c8ddf0" stroke-width="1.2"/>
+  <text x="340" y="78" text-anchor="middle" font-size="12" font-weight="700" fill="#2c2825">ChatWindow</text>
+  <text x="340" y="97" text-anchor="middle" font-size="10" fill="#7a6f65">MessageBubble</text>
+  <text x="340" y="112" text-anchor="middle" font-size="10" fill="#7a6f65">InputBox</text>
+  <text x="340" y="127" text-anchor="middle" font-size="10" fill="#7a6f65">타이핑 애니메이션</text>
+  <text x="340" y="142" text-anchor="middle" font-size="10" fill="#7a6f65">자동 스크롤</text>
+
+  <rect x="470" y="55" width="170" height="110" rx="8" fill="#fff" stroke="#c8ddf0" stroke-width="1.2"/>
+  <text x="555" y="78" text-anchor="middle" font-size="12" font-weight="700" fill="#2c2825">DocumentModal</text>
+  <text x="555" y="97" text-anchor="middle" font-size="10" fill="#7a6f65">문서 목록 조회</text>
+  <text x="555" y="112" text-anchor="middle" font-size="10" fill="#7a6f65">다중 파일 업로드</text>
+  <text x="555" y="127" text-anchor="middle" font-size="10" fill="#7a6f65">문서 삭제</text>
+
+  <rect x="670" y="55" width="170" height="110" rx="8" fill="#fff" stroke="#c8ddf0" stroke-width="1.2"/>
+  <text x="755" y="78" text-anchor="middle" font-size="12" font-weight="700" fill="#2c2825">Zustand Store</text>
+  <text x="755" y="97" text-anchor="middle" font-size="10" fill="#7a6f65">authStore (persist)</text>
+  <text x="755" y="112" text-anchor="middle" font-size="10" fill="#7a6f65">chatStore</text>
+  <text x="755" y="127" text-anchor="middle" font-size="10" fill="#7a6f65">JWT 토큰 관리</text>
+
+  <!-- Arrow: Frontend → Backend -->
+  <line x1="450" y1="180" x2="450" y2="225" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <polygon points="445,222 455,222 450,230" fill="#94a3b8"/>
+  <text x="460" y="208" font-size="10" fill="#94a3b8">REST API + JWT</text>
+
+  <!-- ── BACKEND ── -->
+  <rect x="30" y="230" width="840" height="145" rx="12" fill="#edf7f0" stroke="#52b788" stroke-width="1.5"/>
+  <text x="50" y="254" font-size="11" font-weight="700" fill="#52b788" letter-spacing="1">BACKEND · FastAPI + SQLAlchemy</text>
+
+  <rect x="50" y="265" width="155" height="90" rx="8" fill="#fff" stroke="#b7e4c7" stroke-width="1.2"/>
+  <text x="128" y="287" text-anchor="middle" font-size="12" font-weight="700" fill="#2c2825">/api/auth</text>
+  <text x="128" y="305" text-anchor="middle" font-size="10" fill="#7a6f65">로그인 / JWT 발급</text>
+  <text x="128" y="320" text-anchor="middle" font-size="10" fill="#7a6f65">bcrypt 해싱</text>
+  <text x="128" y="335" text-anchor="middle" font-size="10" fill="#7a6f65">company_name 응답</text>
+
+  <rect x="235" y="265" width="210" height="90" rx="8" fill="#fff" stroke="#b7e4c7" stroke-width="1.2"/>
+  <text x="340" y="287" text-anchor="middle" font-size="12" font-weight="700" fill="#2c2825">/api/chat</text>
+  <text x="340" y="305" text-anchor="middle" font-size="10" fill="#7a6f65">대화 생성 / 메시지 저장</text>
+  <text x="340" y="320" text-anchor="middle" font-size="10" fill="#7a6f65">대화 목록 / 메시지 조회</text>
+  <text x="340" y="335" text-anchor="middle" font-size="10" fill="#7a6f65">대화 삭제 (cascade)</text>
+
+  <rect x="475" y="265" width="180" height="90" rx="8" fill="#fff" stroke="#b7e4c7" stroke-width="1.2"/>
+  <text x="565" y="287" text-anchor="middle" font-size="12" font-weight="700" fill="#2c2825">/api/documents</text>
+  <text x="565" y="305" text-anchor="middle" font-size="10" fill="#7a6f65">다중 파일 업로드</text>
+  <text x="565" y="320" text-anchor="middle" font-size="10" fill="#7a6f65">문서 목록 조회</text>
+  <text x="565" y="335" text-anchor="middle" font-size="10" fill="#7a6f65">문서 삭제</text>
+
+  <rect x="685" y="265" width="160" height="90" rx="8" fill="#fff" stroke="#b7e4c7" stroke-width="1.2"/>
+  <text x="765" y="287" text-anchor="middle" font-size="12" font-weight="700" fill="#2c2825">RAG Pipeline</text>
+  <text x="765" y="305" text-anchor="middle" font-size="10" fill="#7a6f65">청킹 (500자)</text>
+  <text x="765" y="320" text-anchor="middle" font-size="10" fill="#7a6f65">임베딩 → 검색</text>
+  <text x="765" y="335" text-anchor="middle" font-size="10" fill="#7a6f65">Ollama 생성</text>
+
+  <!-- Arrows Backend → Data -->
+  <line x1="200" y1="375" x2="200" y2="415" stroke="#94a3b8" stroke-width="1.5"/>
+  <polygon points="195,412 205,412 200,420" fill="#94a3b8"/>
+  <line x1="340" y1="375" x2="340" y2="415" stroke="#94a3b8" stroke-width="1.5"/>
+  <polygon points="335,412 345,412 340,420" fill="#94a3b8"/>
+  <line x1="565" y1="375" x2="565" y2="415" stroke="#94a3b8" stroke-width="1.5"/>
+  <polygon points="560,412 570,412 565,420" fill="#94a3b8"/>
+  <line x1="765" y1="375" x2="765" y2="415" stroke="#94a3b8" stroke-width="1.5"/>
+  <polygon points="760,412 770,412 765,420" fill="#94a3b8"/>
+
+  <!-- ── DATA LAYER ── -->
+  <rect x="30" y="420" width="320" height="160" rx="12" fill="#fef3e2" stroke="#f4a261" stroke-width="1.5"/>
+  <text x="50" y="444" font-size="11" font-weight="700" fill="#e07c28" letter-spacing="1">PostgreSQL 16</text>
+  <rect x="50" y="455" width="130" height="28" rx="5" fill="#fff" stroke="#fcd5a0" stroke-width="1"/>
+  <text x="115" y="473" text-anchor="middle" font-size="10" fill="#2c2825">companies</text>
+  <rect x="200" y="455" width="130" height="28" rx="5" fill="#fff" stroke="#fcd5a0" stroke-width="1"/>
+  <text x="265" y="473" text-anchor="middle" font-size="10" fill="#2c2825">users</text>
+  <rect x="50" y="495" width="130" height="28" rx="5" fill="#fff" stroke="#fcd5a0" stroke-width="1"/>
+  <text x="115" y="513" text-anchor="middle" font-size="10" fill="#2c2825">conversations</text>
+  <rect x="200" y="495" width="130" height="28" rx="5" fill="#fff" stroke="#fcd5a0" stroke-width="1"/>
+  <text x="265" y="513" text-anchor="middle" font-size="10" fill="#2c2825">messages</text>
+  <text x="190" y="552" text-anchor="middle" font-size="10" fill="#b5aca2">user_id · conversation_id 기반 격리</text>
+  <text x="190" y="567" text-anchor="middle" font-size="10" fill="#b5aca2">회사별 다중 테넌트</text>
+
+  <rect x="370" y="420" width="250" height="160" rx="12" fill="#f0eaff" stroke="#9b72cf" stroke-width="1.5"/>
+  <text x="390" y="444" font-size="11" font-weight="700" fill="#7c4dbb" letter-spacing="1">ChromaDB</text>
+  <rect x="390" y="455" width="95" height="28" rx="5" fill="#fff" stroke="#d8c4f0" stroke-width="1"/>
+  <text x="437" y="473" text-anchor="middle" font-size="10" fill="#2c2825">company_1</text>
+  <rect x="505" y="455" width="95" height="28" rx="5" fill="#fff" stroke="#d8c4f0" stroke-width="1"/>
+  <text x="552" y="473" text-anchor="middle" font-size="10" fill="#2c2825">company_2</text>
+  <text x="495" y="510" text-anchor="middle" font-size="10" fill="#b5aca2">cosine similarity 검색</text>
+  <text x="495" y="525" text-anchor="middle" font-size="10" fill="#b5aca2">384차원 벡터 저장</text>
+  <text x="495" y="540" text-anchor="middle" font-size="10" fill="#b5aca2">source 메타데이터로 관리</text>
+  <text x="495" y="555" text-anchor="middle" font-size="10" fill="#b5aca2">Top-5 청크 반환</text>
+
+  <rect x="640" y="420" width="230" height="160" rx="12" fill="#fde8e8" stroke="#e57373" stroke-width="1.5"/>
+  <text x="660" y="444" font-size="11" font-weight="700" fill="#c0392b" letter-spacing="1">Ollama (로컬 LLM)</text>
+  <rect x="660" y="455" width="190" height="28" rx="5" fill="#fff" stroke="#f5b7b1" stroke-width="1"/>
+  <text x="755" y="473" text-anchor="middle" font-size="10" fill="#2c2825">llama3.2</text>
+  <text x="755" y="510" text-anchor="middle" font-size="10" fill="#b5aca2">localhost:11434</text>
+  <text x="755" y="525" text-anchor="middle" font-size="10" fill="#b5aca2">한국어 답변 생성</text>
+  <text x="755" y="540" text-anchor="middle" font-size="10" fill="#b5aca2">stream: false</text>
+  <text x="755" y="555" text-anchor="middle" font-size="10" fill="#b5aca2">timeout: 60s</text>
+
+  <rect x="390" y="590" width="490" height="22" rx="5" fill="#e8e2d9"/>
+  <text x="635" y="606" text-anchor="middle" font-size="10" fill="#6b6259">임베딩: paraphrase-multilingual-MiniLM-L12-v2 (sentence-transformers, 384dim)</text>
+</svg>
