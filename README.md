@@ -1,36 +1,214 @@
 # Company Assistant
 
-RAG(Retrieval-Augmented Generation) 기반 사내 AI 챗봇
+RAG(Retrieval-Augmented Generation) 기반 사내 AI 챗봇. 회사별로 문서를 업로드하면 직원들이 해당 문서를 기반으로 AI와 대화할 수 있습니다.
+
+---
+
+## 시스템 아키텍처
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                          Frontend (React)                        │
+│                                                                  │
+│  ┌──────────┐    ┌──────────────────────────────────────────┐   │
+│  │ Sidebar  │    │               ChatWindow                  │   │
+│  │          │    │                                           │   │
+│  │ 대화목록  │    │  UserBubble ──────────────────────────►  │   │
+│  │ 문서관리  │    │  AI Bubble  ◄──────────────────────────  │   │
+│  │ 프로필   │    │                                           │   │
+│  └──────────┘    └──────────────────────────────────────────┘   │
+└────────────────────────────┬────────────────────────────────────┘
+                             │ REST API (JWT)
+┌────────────────────────────▼────────────────────────────────────┐
+│                         Backend (FastAPI)                        │
+│                                                                  │
+│   /api/auth/login          /api/chat         /api/documents      │
+│        │                       │                   │             │
+│        ▼                       ▼                   ▼             │
+│   JWT 발급              RAG Pipeline          문서 업로드/삭제    │
+│                               │                                  │
+│                    ┌──────────┴──────────┐                       │
+│                    │                     │                       │
+│                    ▼                     ▼                       │
+│               [검색 단계]           [생성 단계]                   │
+│          쿼리 → 임베딩 →        컨텍스트 청크 →                   │
+│          ChromaDB 검색 →        Ollama(llama3.2) →               │
+│          유사 청크 Top-5         한국어 답변 생성                  │
+└──────────────────────┬──────────────────────────────────────────┘
+                       │
+         ┌─────────────┴──────────────┐
+         │                            │
+┌────────▼────────┐         ┌────────▼────────┐
+│   PostgreSQL    │         │    ChromaDB      │
+│                 │         │                  │
+│ companies       │         │ company_1        │
+│ users           │         │ company_2        │
+│ conversations   │         │  (벡터 컬렉션)   │
+│ messages        │         └─────────────────┘
+└─────────────────┘
+```
+
+## 문서 업로드 흐름
+
+```
+PDF / DOCX / TXT
+      │
+      ▼
+ 텍스트 추출
+ (pdfplumber / python-docx)
+      │
+      ▼
+ 청킹 (500자 단위, 50자 overlap)
+      │
+      ▼
+ 임베딩 생성
+ (paraphrase-multilingual-MiniLM-L12-v2)
+ → 384차원 벡터
+      │
+      ▼
+ ChromaDB 저장
+ (회사별 컬렉션: company_{id})
+```
+
+## 채팅 흐름
+
+```
+사용자 질문
+      │
+      ▼
+ 쿼리 임베딩
+      │
+      ▼
+ ChromaDB 검색 (cosine similarity)
+ → 유사 청크 Top-5 추출
+      │
+      ▼
+ Ollama (llama3.2) 프롬프트 생성
+ → 한국어 답변 생성
+      │
+      ▼
+ 대화 DB 저장 (conversations / messages)
+      │
+      ▼
+ 클라이언트로 응답
+```
+
+---
 
 ## 기술 스택
 
 | 영역 | 기술 |
 |------|------|
-| 프론트엔드 | React, TypeScript, Vite |
-| 백엔드 | FastAPI (예정) |
+| 프론트엔드 | React 19, TypeScript, Vite 8 |
 | 상태 관리 | Zustand |
 | HTTP 클라이언트 | Axios |
 | 라우팅 | React Router v6 |
-| 벡터 DB | Chroma / Qdrant (예정) |
-| LLM | Claude API (예정) |
+| 백엔드 | FastAPI, SQLAlchemy (async) |
+| DB | PostgreSQL 16 |
+| 벡터 DB | ChromaDB |
+| 임베딩 모델 | sentence-transformers (paraphrase-multilingual-MiniLM-L12-v2) |
+| LLM | Ollama (llama3.2, 로컬) |
+| 인증 | JWT (python-jose) |
+| 인프라 | Docker Compose |
+
+---
 
 ## 프로젝트 구조
 
 ```
 company-assistant/
-├── frontend/               # React 앱
+├── frontend/
 │   └── src/
-│       ├── components/     # 공통 컴포넌트
-│       ├── pages/          # 페이지 (Login, Chat)
-│       ├── store/          # Zustand 상태 관리
-│       ├── services/       # API 통신
-│       └── types/          # TypeScript 타입 정의
-└── backend/                # FastAPI 앱 (예정)
+│       ├── components/
+│       │   ├── Chat/
+│       │   │   ├── Sidebar.tsx        # 대화목록, 문서관리, 프로필
+│       │   │   ├── ChatWindow.tsx     # 메시지 목록
+│       │   │   ├── MessageBubble.tsx  # 메시지 말풍선
+│       │   │   ├── InputBox.tsx       # 메시지 입력창
+│       │   │   └── DocumentModal.tsx  # 문서 관리 모달
+│       │   └── Layout/
+│       │       └── ProtectedRoute.tsx
+│       ├── pages/
+│       │   ├── LoginPage.tsx
+│       │   └── ChatPage.tsx
+│       ├── store/
+│       │   ├── authStore.ts           # 인증 상태 (persist)
+│       │   └── chatStore.ts           # 채팅 상태
+│       ├── services/
+│       │   └── api.ts                 # authApi / chatApi / documentApi
+│       └── types/
+│           └── index.ts
+│
+└── backend/
+    ├── app/
+    │   ├── api/
+    │   │   ├── auth.py                # POST /api/auth/login
+    │   │   ├── chat.py                # POST /api/chat, GET /api/chat/conversations
+    │   │   └── documents.py           # POST/GET/DELETE /api/documents
+    │   ├── core/
+    │   │   ├── config.py
+    │   │   ├── database.py
+    │   │   └── security.py            # JWT, bcrypt
+    │   ├── models/
+    │   │   ├── db_models.py           # Company, User, Conversation, Message
+    │   │   └── schemas.py
+    │   ├── rag/
+    │   │   ├── chunker.py             # 텍스트 추출 및 청킹
+    │   │   ├── embedder.py            # sentence-transformers
+    │   │   ├── retriever.py           # ChromaDB 검색/저장/삭제
+    │   │   ├── generator.py           # Ollama LLM 호출
+    │   │   └── pipeline.py            # RAG 전체 파이프라인
+    │   ├── services/
+    │   │   └── document_service.py
+    │   └── main.py
+    ├── seed.py                        # 초기 데이터 시딩
+    ├── requirements.txt
+    └── .env
 ```
+
+---
 
 ## 시작하기
 
-### 프론트엔드
+### 사전 요구사항
+
+- Docker Desktop
+- Python 3.12
+- Node.js 20+
+- Ollama
+
+### 1. 인프라 실행
+
+```bash
+docker-compose up -d
+```
+
+PostgreSQL (5432), ChromaDB (8001) 실행
+
+### 2. Ollama 모델 준비
+
+```bash
+brew install ollama
+brew services start ollama
+ollama pull llama3.2
+```
+
+### 3. 백엔드
+
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+# DB 초기화 및 시딩
+python seed.py
+
+# 서버 실행
+uvicorn app.main:app --reload
+```
+
+### 4. 프론트엔드
 
 ```bash
 cd frontend
@@ -40,12 +218,27 @@ npm run dev
 
 브라우저에서 http://localhost:5173 접속
 
+---
+
 ## 구현 현황
 
+### 백엔드
+- [x] JWT 인증 (로그인 / 토큰 발급)
+- [x] 회사별 다중 테넌트 구조 (Company / User)
+- [x] 역할 기반 접근 제어 (admin / employee)
+- [x] 문서 업로드 API (PDF / DOCX / TXT)
+- [x] RAG 파이프라인 (청킹 → 임베딩 → 검색 → 생성)
+- [x] 채팅 API (대화 생성 / 메시지 저장)
+- [x] 대화 목록 / 메시지 조회 API
+- [x] 대화 삭제 API
+- [x] 문서 목록 / 삭제 API
+
+### 프론트엔드
 - [x] 로그인 화면
-- [x] JWT 인증 상태 관리 (localStorage 영속)
-- [x] Protected Route (비인증 시 로그인 리다이렉트)
-- [ ] 채팅 UI
-- [ ] 문서 업로드
-- [ ] FastAPI 백엔드
-- [ ] RAG 파이프라인
+- [x] Protected Route
+- [x] 사이드바 (대화 목록 / 새 대화 / 대화 삭제)
+- [x] 채팅 UI (말풍선 / 자동 스크롤 / 타이핑 애니메이션)
+- [x] 실제 백엔드 API 연결
+- [x] 관리자 전용 문서 관리 모달 (업로드 / 삭제)
+- [x] 회사 이름 표시 ({회사명} 어시스턴트)
+- [x] 로그아웃 시 채팅 상태 초기화
