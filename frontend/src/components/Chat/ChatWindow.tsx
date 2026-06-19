@@ -4,7 +4,8 @@ import MessageBubble from './MessageBubble';
 import styles from './ChatWindow.module.css';
 
 export default function ChatWindow() {
-  const { messages, isLoading } = useChatStore();
+  const { messages, loadingConversationId, currentConversationId } = useChatStore();
+  const isLoading = loadingConversationId !== null && loadingConversationId === currentConversationId;
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

@@ -6,12 +6,16 @@ import styles from './InputBox.module.css';
 
 export default function InputBox() {
   const [text, setText] = useState('');
-  const { isLoading, addMessage, setLoading, currentConversationId, setCurrentConversation, addConversation } = useChatStore();
+  const { loadingConversationId, currentConversationId, addMessage, setLoading, setCurrentConversation, addConversation } = useChatStore();
+  const isLoading = loadingConversationId !== null;
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSubmit = async () => {
     const content = text.trim();
     if (!content || isLoading) return;
+
+    // 요청 시점의 conversationId 고정
+    const requestedConversationId = currentConversationId;
 
     const userMsg: Message = {
       id: Date.now().toString(),
@@ -23,20 +27,27 @@ export default function InputBox() {
     addMessage(userMsg);
     setText('');
     if (textareaRef.current) textareaRef.current.style.height = 'auto';
-    setLoading(true);
+    setLoading(true, requestedConversationId);
 
     try {
-      const res = await chatApi.sendMessage(content, currentConversationId ?? undefined);
-      const assistantMsg: Message = {
-        id: res.id,
-        role: 'assistant',
-        content: res.content,
-        created_at: res.created_at,
-      };
-      addMessage(assistantMsg);
+      const res = await chatApi.sendMessage(content, requestedConversationId ?? undefined);
+
+      // 응답이 왔을 때 여전히 같은 대화를 보고 있는 경우만 메시지 추가
+      const stillOnSameConversation =
+        useChatStore.getState().currentConversationId === (res.conversation_id ?? requestedConversationId);
+
+      if (stillOnSameConversation) {
+        const assistantMsg: Message = {
+          id: res.id,
+          role: 'assistant',
+          content: res.content,
+          created_at: res.created_at,
+        };
+        addMessage(assistantMsg);
+      }
 
       // 새 대화였으면 conversation_id 세팅 + 사이드바 목록에 추가
-      if (!currentConversationId) {
+      if (!requestedConversationId) {
         setCurrentConversation(res.conversation_id);
         addConversation({
           id: res.conversation_id,

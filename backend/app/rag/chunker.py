@@ -7,8 +7,32 @@ def extract_text(file_path: str) -> str:
     suffix = path.suffix.lower()
 
     if suffix == ".pdf":
+        pages = []
         with pdfplumber.open(file_path) as pdf:
-            return "\n".join(page.extract_text() or "" for page in pdf.pages)
+            for page in pdf.pages:
+                parts = []
+                text = page.extract_text()
+                if text:
+                    parts.append(text)
+                for table in page.extract_tables():
+                    rows = []
+                    headers = None
+                    for row in table:
+                        cells = [cell.strip().replace("\n", " ") if cell else "" for cell in row]
+                        # 첫 행이 헤더인지 판단 (모든 셀이 비어있지 않으면 헤더로 간주)
+                        if headers is None:
+                            if all(cells):
+                                headers = cells
+                                continue
+                            else:
+                                headers = []
+                        if headers and len(headers) == len(cells):
+                            rows.append(" / ".join(f"{h}: {v}" for h, v in zip(headers, cells) if v))
+                        else:
+                            rows.append(" | ".join(cells))
+                    parts.append("\n".join(rows))
+                pages.append("\n".join(parts))
+        return "\n\n".join(pages)
 
     if suffix == ".docx":
         doc = docx.Document(file_path)
