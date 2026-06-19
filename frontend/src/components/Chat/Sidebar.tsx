@@ -8,7 +8,7 @@ import styles from './Sidebar.module.css';
 export default function Sidebar() {
   const { user, logout } = useAuthStore();
   const {
-    conversations, currentConversationId,
+    conversations, currentConversationId, loadingConversationId,
     setConversations, setCurrentConversation, setMessages,
     startNewConversation, removeConversation,
   } = useChatStore();
@@ -23,6 +23,13 @@ export default function Sidebar() {
 
   const handleSelectConversation = async (id: string) => {
     if (id === currentConversationId || loadingConv) return;
+
+    // 로딩 중인 대화로 돌아올 때는 DB 재조회 없이 현재 메시지 유지
+    if (id === loadingConversationId) {
+      setCurrentConversation(id);
+      return;
+    }
+
     setLoadingConv(id);
     try {
       const msgs = await chatApi.getMessages(id);
