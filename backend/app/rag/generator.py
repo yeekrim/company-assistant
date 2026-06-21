@@ -35,16 +35,22 @@ def build_prompt(query: str, context_chunks: list[str]) -> str:
 [답변]"""
 
 
-async def generate(query: str, context_chunks: list[str]) -> str:
+async def generate(query: str, context_chunks: list[str], history: list[dict] | None = None) -> str:
     if not context_chunks:
         return "업로드된 사내 문서에서 관련 내용을 찾지 못했습니다. 관련 문서를 먼저 업로드해 주세요."
 
     prompt = build_prompt(query, context_chunks)
     client = get_client()
 
+    messages = [
+        {"role": "system", "content": "당신은 사내 문서 기반 AI 어시스턴트입니다. 문서에 있는 내용만 답변하고, 한국어로만 답하세요."},
+        *(history or []),
+        {"role": "user", "content": prompt},
+    ]
+
     completion = await client.chat.completions.create(
         model=NVIDIA_MODEL,
-        messages=[{"role": "user", "content": prompt}],
+        messages=messages,
         temperature=0.2,
         top_p=0.7,
         max_tokens=1024,
