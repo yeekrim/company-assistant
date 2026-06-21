@@ -7,6 +7,8 @@ from app.core.security import decode_token
 from app.models.db_models import User, Conversation, Message
 from app.models.schemas import ChatRequest, ChatResponse
 from app.rag.pipeline import run as rag_run
+from app.rag.embedder import embed
+import numpy as np
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 router = APIRouter(prefix="/api/chat", tags=["chat"])
@@ -91,6 +93,24 @@ async def chat(
         db.add(conversation)
         await db.flush()
 
+    # 이전 대화 최근 6턴 조회 후 현재 질문과 유사도 기반 필터링
+    history_result = await db.execute(
+        select(Message)
+        .where(Message.conversation_id == conversation.id)
+        .order_by(Message.created_at.desc())
+        .limit(6)
+    )
+    recent_messages = list(reversed(history_result.scalars().all()))
+
+    history = []
+    if recent_messages:
+        query_vec = np.array(embed([data.message])[0])
+        for m in recent_messages:
+            msg_vec = np.array(embed([m.content])[0])
+            cosine_sim = float(np.dot(query_vec, msg_vec) / (np.linalg.norm(query_vec) * np.linalg.norm(msg_vec)))
+            if cosine_sim >= 0.7:
+                history.append({"role": m.role, "content": m.content})
+
     user_time = datetime.utcnow()
     user_msg = Message(
         conversation_id=conversation.id,
@@ -100,7 +120,7 @@ async def chat(
     )
     db.add(user_msg)
 
-    answer = await rag_run(current_user.company_id, data.message)
+    answer = await rag_run(current_user.company_id, data.message, history)
 
     assistant_msg = Message(
         conversation_id=conversation.id,
