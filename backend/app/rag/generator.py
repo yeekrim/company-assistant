@@ -1,7 +1,7 @@
 from openai import AsyncOpenAI
 from app.core.config import settings
 
-NVIDIA_MODEL = "meta/llama-3.1-70b-instruct"
+NVIDIA_MODEL = "nvidia/nemotron-3-super-120b-a12b"
 
 _client = None
 
@@ -55,6 +55,8 @@ async def generate(query: str, context_chunks: list[str], history: list[dict] | 
         top_p=0.7,
         max_tokens=1024,
         stream=False,
+        # 기본값인 추론(thinking) 모드를 끔: 켜면 추론에 토큰을 써서 답변이 비거나 느려짐
+        extra_body={"chat_template_kwargs": {"enable_thinking": False}},
     )
 
     return completion.choices[0].message.content or ""
