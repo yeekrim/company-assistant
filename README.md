@@ -29,7 +29,7 @@ RAG(Retrieval-Augmented Generation) 기반 사내 AI 챗봇. 회사별로 문서
        └─ 질문 입력
             ├─ 쿼리 임베딩 → ChromaDB 유사도 검색 (Top-10)
             ├─ 이전 대화 히스토리 유사도 필터링 (최근 6턴 중 0.7 이상)
-            └─ NVIDIA NIM (Llama 3.1 70B) → 한국어 답변 생성
+            └─ NVIDIA NIM (Nemotron 3 Super 120B) → 한국어 답변 생성
   └─ 기존 대화 클릭 → 이전 메시지 불러오기
   └─ 대화 hover → X 버튼으로 삭제
   └─ 로그아웃 → 채팅 상태 초기화
@@ -68,7 +68,7 @@ RAG(Retrieval-Augmented Generation) 기반 사내 AI 챗봇. 회사별로 문서
 | DB | PostgreSQL 16 |
 | 벡터 DB | ChromaDB |
 | 임베딩 모델 | sentence-transformers (paraphrase-multilingual-MiniLM-L12-v2) |
-| LLM | NVIDIA NIM (Llama 3.1 70B Instruct, 클라우드) |
+| LLM | NVIDIA NIM (Nemotron 3 Super 120B A12B, 클라우드) |
 | 인증 | JWT (python-jose) |
 | 인프라 | Docker Compose |
 
@@ -194,7 +194,8 @@ npm run dev
 - [x] 대화 목록 / 메시지 조회 API
 - [x] 대화 삭제 API
 - [x] 문서 목록 / 삭제 API
-- [x] LLM 모델 최적화 (llama3.2 → gemma3:4b → NVIDIA NIM Llama 3.1 70B Instruct)
+- [x] LLM 모델 최적화 (llama3.2 → gemma3:4b → NVIDIA NIM Llama 3.1 70B Instruct → Nemotron 3 Super 120B)
+  - Llama 3.1 70B가 NIM에서 2026-08-26 지원 종료되어 교체
 - [x] 프롬프트 강화 (할루시네이션 방지 / 언어 혼용 방지 / 톤 설정)
 - [x] 대화 히스토리 반영 (최근 6턴 중 유사도 0.7 이상 턴만 필터링하여 컨텍스트 구성)
 - [x] RAG 검색 범위 확장 (top_k 5 → 10)
