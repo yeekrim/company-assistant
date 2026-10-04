@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     CHROMA_PORT: int = 8001
     GEMINI_API_KEY: str = ""
     NVIDIA_API_KEY: str = ""
+    TABLE_STORE_DIR: str = "data/tables"
 
     class Config:
         env_file = ".env"
