@@ -37,6 +37,12 @@ def test_empty_cells_become_none():
     assert [r[1] for r in t.rows] == [None, 500]
 
 
+def test_leading_zero_codes_stay_text():
+    [t] = assemble([("", [["사번", "금액"], ["018100002", "0"], ["018100003", "0.5"]])])
+    assert [r[0] for r in t.rows] == ["018100002", "018100003"]
+    assert [r[1] for r in t.rows] == [0.0, 0.5]
+
+
 def test_continued_table_across_pages_is_merged():
     header = ["이름", "금액"]
     raw = [("부록 1", [header, ["김", "100"]]), ("", [header, ["이", "200"]])]
@@ -57,6 +63,11 @@ def test_header_only_table_is_skipped():
 def test_blank_and_duplicate_headers_are_named():
     [t] = assemble([("", [["금액", "", "금액"], ["1", "2", "3"]])])
     assert t.columns == ["금액", "열2", "금액_2"]
+
+
+def test_duplicate_header_suffix_does_not_collide():
+    [t] = assemble([("", [["a", "a_2", "a"], ["1", "2", "3"]])])
+    assert t.columns == ["a", "a_2", "a_3"]
 
 
 def test_short_rows_are_padded():

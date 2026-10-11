@@ -13,6 +13,7 @@ import pdfplumber
 
 NUM = re.compile(r"^-?\d{1,3}(,\d{3})+(\.\d+)?$|^-?\d+(\.\d+)?$")
 DATE = re.compile(r"^(\d{4})[-./](\d{1,2})[-./](\d{1,2})\.?$")
+LEADING_ZERO = re.compile(r"^-?0\d")  # 사번·우편번호처럼 0으로 시작하는 코드값
 
 
 @dataclass
@@ -57,15 +58,16 @@ def _clean(cell) -> str:
 
 def _header(cells: list[str]) -> list[str]:
     """빈 헤더는 '열N'으로, 중복 헤더는 '_2' 등을 붙여 고유하게 만든다."""
-    seen: dict[str, int] = {}
+    names = [c or f"열{i}" for i, c in enumerate(cells, 1)]
+    used: set[str] = set()
     out = []
-    for i, c in enumerate(cells, 1):
-        name = c or f"열{i}"
-        if name in seen:
-            seen[name] += 1
-            name = f"{name}_{seen[name]}"
-        else:
-            seen[name] = 1
+    for name in names:
+        if name in used:
+            n = 2
+            while f"{name}_{n}" in used or f"{name}_{n}" in names:
+                n += 1
+            name = f"{name}_{n}"
+        used.add(name)
         out.append(name)
     return out
 
@@ -96,11 +98,12 @@ def assemble(raw_tables: list[tuple[str, list[list]]]) -> list[ExtractedTable]:
 
 
 def _coerce(col: list[str]) -> list:
-    """열 전체가 숫자면 int/float, 날짜면 date로 변환. 하나라도 아니면 문자열 유지."""
+    """열 전체가 숫자면 int/float, 날짜면 date로 변환. 하나라도 아니면 문자열 유지.
+    0으로 시작하는 값(예: 사번 018100002)이 있으면 코드값으로 보고 문자열로 둔다."""
     vals = [v for v in col if v != ""]
     if not vals:
         return [None] * len(col)
-    if all(NUM.match(v) for v in vals):
+    if all(NUM.match(v) for v in vals) and not any(LEADING_ZERO.match(v) for v in vals):
         nums = [float(v.replace(",", "")) if v else None for v in col]
         if all(n is None or n.is_integer() for n in nums):
             return [int(n) if n is not None else None for n in nums]
