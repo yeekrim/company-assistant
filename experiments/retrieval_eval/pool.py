@@ -14,18 +14,29 @@ import csv
 import hashlib
 from pathlib import Path
 
-from companies import COMPANIES
+from companies import COMPANIES, dated_docs
 from configs import CONFIGS, TOP_K, build
 from questions import QUESTIONS
 
 from common import Trace
 
 LABELS = Path(__file__).resolve().parent / "labels" / "labels.csv"
-BASE_FIELDS = ["company", "qid", "question", "hint", "chunk_id", "label", "note"]
+BASE_FIELDS = ["company", "qid", "question", "hint", "chunk_id", "label", "note", "sources"]
 
 
 def chunk_id(text: str) -> str:
     return hashlib.sha1(text.encode()).hexdigest()[:10]
+
+
+def source_map(company: str) -> dict[str, str]:
+    """청크 텍스트 → 그 청크가 나온 문서 이름들. 라벨링할 때 어느 문서(버전)의 청크인지 보이게 한다.
+    A·D 설정의 청킹(문서별 500자) 기준이다. B 설정에만 있는 청크는 비어 있다."""
+    from configs import chunks_current
+    found: dict[str, set] = {}
+    for path, _ in dated_docs(company):
+        for text in chunks_current([path]):
+            found.setdefault(text, set()).add(path.name)
+    return {t: ", ".join(sorted(s)) for t, s in found.items()}
 
 
 def read_rows() -> list[dict]:
@@ -46,12 +57,14 @@ def main():
     rows = {(r["qid"], r["chunk_id"]): r for r in read_rows()}
     rank_cols = list(dict.fromkeys(c for r in rows.values() for c in r if c.startswith("rank:")))
 
+    sources_by_company: dict[str, dict[str, str]] = {}
     for name in names:
         col = f"rank:{name}"
         for r in rows.values():  # 이 설정의 순위는 새로 매긴다 (대상 회사만)
             if r["company"] in companies:
                 r[col] = ""
         for company in companies:
+            sources = sources_by_company.setdefault(company, source_map(company))
             index = build(name, company)
             print(f"{company} {name}: 청크 {len(index.chunks)}개")
             for qid, question, hint in QUESTIONS[company]:
@@ -59,6 +72,7 @@ def main():
                     key = (qid, chunk_id(text))
                     r = rows.setdefault(key, {"company": company, "qid": qid, "question": question,
                                               "hint": hint, "chunk_id": key[1], "label": "", "note": "",
+                                              "sources": sources.get(text, ""),
                                               "text": text.replace("\n", " ⏎ ")})
                     r[col] = str(rank)
         if col not in rank_cols:
