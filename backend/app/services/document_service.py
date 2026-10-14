@@ -3,6 +3,7 @@ import os
 import tempfile
 from fastapi import UploadFile
 from app.rag.chunker import extract_text, chunk_text
+from app.rag.dates import UNKNOWN
 from app.rag.retriever import add_documents
 from app.tables.extractor import extract_tables
 from app.tables.store import save_tables
@@ -11,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 ALLOWED_EXTENSIONS = {".pdf", ".docx", ".txt", ".md"}
 
-async def process_upload(file: UploadFile, company_id: int) -> dict:
+async def process_upload(file: UploadFile, company_id: int, effective_date: int = UNKNOWN) -> dict:
     ext = os.path.splitext(file.filename)[1].lower()
     if ext not in ALLOWED_EXTENSIONS:
         raise ValueError(f"지원하지 않는 파일 형식입니다: {ext}")
@@ -24,12 +25,12 @@ async def process_upload(file: UploadFile, company_id: int) -> dict:
     try:
         text = extract_text(tmp_path)
         chunks = chunk_text(text)
-        add_documents(company_id, chunks, doc_name=file.filename)
+        add_documents(company_id, chunks, doc_name=file.filename, effective_date=effective_date)
         tables = _store_tables(tmp_path, company_id, file.filename)
     finally:
         os.unlink(tmp_path)
 
-    return {"filename": file.filename, "chunks": len(chunks), "tables": tables}
+    return {"filename": file.filename, "chunks": len(chunks), "tables": tables, "effective_date": effective_date}
 
 
 def _store_tables(path: str, company_id: int, doc_name: str) -> int:

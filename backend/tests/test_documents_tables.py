@@ -71,3 +71,38 @@ def test_delete_removes_tables(client):
     r = client.delete("/api/documents/인원.docx")
     assert r.status_code == 200
     assert store.list_tables(FakeUser.company_id) == []
+
+
+def test_upload_passes_effective_dates_in_file_order(client, monkeypatch):
+    saved = {}
+    monkeypatch.setattr(document_service, "add_documents",
+                        lambda company_id, chunks, doc_name, effective_date: saved.__setitem__(doc_name, effective_date))
+    r = client.post("/api/documents/upload",
+                    files=[("files", ("a.txt", "가".encode())), ("files", ("b.txt", "나".encode()))],
+                    data={"effective_dates": ["2016-01-01", ""]})
+    assert r.json()["errors"] == []
+    assert saved == {"a.txt": 20160101, "b.txt": 0}
+
+
+def test_upload_rejects_bad_effective_date_per_file(client):
+    r = client.post("/api/documents/upload",
+                    files=[("files", ("a.txt", "가".encode()))],
+                    data={"effective_dates": ["2016-13-01"]})
+    assert r.json()["uploaded"] == []
+    assert "YYYY-MM-DD" in r.json()["errors"][0]["error"]
+
+
+def test_upload_rejects_mismatched_date_count(client):
+    r = client.post("/api/documents/upload",
+                    files=[("files", ("a.txt", "가".encode())), ("files", ("b.txt", "나".encode()))],
+                    data={"effective_dates": ["2016-01-01"]})
+    assert r.status_code == 422
+
+
+def test_patch_effective_date(client, monkeypatch):
+    calls = []
+    monkeypatch.setattr(documents, "set_effective_date", lambda *a: calls.append(a))
+    r = client.patch("/api/documents/a.txt", json={"effective_date": "2020-05-01"})
+    assert r.status_code == 200
+    assert calls == [(FakeUser.company_id, "a.txt", 20200501)]
+    assert client.patch("/api/documents/a.txt", json={"effective_date": "bad"}).status_code == 422
