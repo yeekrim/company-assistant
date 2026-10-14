@@ -67,6 +67,35 @@ def test_add_documents_calls_upsert_with_correct_data():
         assert call_kwargs["metadatas"] == [{"source": "guide.pdf"}, {"source": "guide.pdf"}]
 
 
+def test_add_documents_deletes_old_chunks_before_upsert():
+    col = make_mock_collection()
+    with patch("app.rag.retriever.get_collection", return_value=col), \
+         patch("app.rag.retriever.embed", return_value=[[0.1] * 384]):
+        add_documents(company_id=1, chunks=["청크1"], doc_name="guide.pdf")
+        col.delete.assert_called_once_with(where={"source": "guide.pdf"})
+        assert [c[0] for c in col.method_calls if c[0] in ("delete", "upsert")] == ["delete", "upsert"]
+
+
+def test_add_documents_keeps_old_chunks_if_embedding_fails():
+    col = make_mock_collection()
+    with patch("app.rag.retriever.get_collection", return_value=col), \
+         patch("app.rag.retriever.embed", side_effect=RuntimeError("embed 실패")):
+        with pytest.raises(RuntimeError):
+            add_documents(company_id=1, chunks=["청크1"], doc_name="guide.pdf")
+        col.delete.assert_not_called()
+
+
+def test_reupload_with_fewer_chunks_leaves_no_stale_chunks():
+    """실제 (인메모리) Chroma로 재업로드 후 남은 청크를 확인한다."""
+    import chromadb
+    col = chromadb.EphemeralClient().create_collection("reupload_test")
+    with patch("app.rag.retriever.get_collection", return_value=col), \
+         patch("app.rag.retriever.embed", side_effect=lambda texts: [[0.1] * 4 for _ in texts]):
+        add_documents(company_id=1, chunks=["a", "b", "c"], doc_name="guide.pdf")
+        add_documents(company_id=1, chunks=["x"], doc_name="guide.pdf")
+    assert col.get(where={"source": "guide.pdf"})["documents"] == ["x"]
+
+
 # ── list_documents ────────────────────────────────────────────────
 
 def test_list_documents_returns_unique_sources():
