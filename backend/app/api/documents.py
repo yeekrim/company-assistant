@@ -7,6 +7,10 @@ from app.core.security import decode_token
 from app.models.db_models import User
 from app.services.document_service import process_upload
 from app.rag.retriever import list_documents, delete_document
+from app.tables.store import delete_tables
+import logging
+
+logger = logging.getLogger(__name__)
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 router = APIRouter(prefix="/api/documents", tags=["documents"])
@@ -59,6 +63,10 @@ async def remove_document(
 ):
     try:
         delete_document(current_user.company_id, doc_name)
-        return {"message": f"'{doc_name}' 삭제 완료"}
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+    try:
+        delete_tables(current_user.company_id, doc_name)
+    except Exception:
+        logger.exception("표 삭제 실패: company=%s doc=%s", current_user.company_id, doc_name)
+    return {"message": f"'{doc_name}' 삭제 완료"}

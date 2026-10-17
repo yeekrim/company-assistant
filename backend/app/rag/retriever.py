@@ -21,6 +21,8 @@ def get_collection(company_id: int):
 def add_documents(company_id: int, chunks: list[str], doc_name: str):
     collection = get_collection(company_id)
     embeddings = embed(chunks)
+    # 같은 문서 재업로드 시 청크 수가 줄면 옛 청크가 남으므로 먼저 지운다 (임베딩 실패 시 기존 문서 유지)
+    collection.delete(where={"source": doc_name})
     ids = [f"{doc_name}_{i}" for i in range(len(chunks))]
     collection.upsert(
         ids=ids,
