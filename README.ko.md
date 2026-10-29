@@ -2,209 +2,141 @@
 
 [日本語](README.md)
 
-RAG(Retrieval-Augmented Generation) 기반 사내 AI 챗봇. 회사별로 문서를 업로드하면 직원들이 해당 문서를 기반으로 AI와 대화할 수 있습니다.
+사내 규정과 매뉴얼을 바탕으로 직원의 질문에 답하는, 회사별 AI 챗봇입니다. 관리자가 PDF·Word·텍스트 문서를 업로드하면, 그 회사 직원만 해당 문서를 근거로 한 답변을 받을 수 있습니다. "규정 어디에 적혀 있는지 찾는" 수고를 줄이는 것을 목표로, React/TypeScript 프런트엔드부터 FastAPI 백엔드, DB, 인증까지 혼자 개발했습니다.
 
 ---
 
-## 유저 플로우
+## 주요 기능
 
-### 관리자 (Admin)
-
-```
-로그인
-  └─ 사이드바에 "사내 문서 관리" 버튼 표시
-       └─ 문서 관리 모달 열기
-            ├─ PDF / DOCX / TXT 업로드 (다중 파일 가능)
-            │    └─ 텍스트 추출 → 청킹 → 임베딩 → ChromaDB 저장
-            └─ 업로드된 문서 목록 확인 / 삭제
-  └─ 새 대화 시작 또는 기존 대화 선택
-       └─ 질문 입력
-            └─ RAG 파이프라인 실행 → 답변 수신
-```
-
-### 직원 (Employee)
-
-```
-로그인
-  └─ 사이드바에 기존 대화 목록 표시
-  └─ 새 대화 시작
-       └─ 질문 입력
-            ├─ 쿼리 임베딩 → ChromaDB 유사도 검색 (Top-10)
-            ├─ 이전 대화 히스토리 유사도 필터링 (최근 메시지 6개 중 0.7 이상)
-            └─ NVIDIA NIM (Nemotron 3 Super 120B) → 한국어 답변 생성
-  └─ 기존 대화 클릭 → 이전 메시지 불러오기
-  └─ 대화 hover → X 버튼으로 삭제
-  └─ 로그아웃 → 채팅 상태 초기화
-```
-
-### 대화 전환 시
-
-```
-대화 A에서 질문 전송 (답변 생성 중)
-  └─ 대화 B로 전환
-       ├─ 대화 A 로딩 말풍선 숨김 (대화 B에는 표시 안 됨)
-       └─ 대화 B 메시지 정상 표시
-  └─ 대화 A로 복귀
-       ├─ 저장된 메시지 복원 (DB 재조회 없음)
-       ├─ 로딩 말풍선 재표시
-       └─ 답변 도착 시 메시지 추가
-```
+- **문서 기반 질의응답**: 직원이 자연스러운 문장으로 질문하면, 업로드된 문서에서 관련 부분을 찾아 그 내용만을 근거로 답합니다. 문서에 없는 내용은 추측하지 않고 "찾지 못했다"고 답합니다
+- **회사별 데이터 분리와 권한**: 로그인한 사용자의 회사 문서만 검색 대상이 됩니다. 문서 업로드·삭제·시행일 변경은 관리자만 할 수 있습니다
+- **규정 신구판 구분**: 같은 규정의 여러 판을 시행일과 함께 등록해 두면, 그 시점에 유효한 판을 따라 답하고 어느 판(시행일)을 근거로 했는지도 밝힙니다. "2020년에는~"처럼 과거 시점을 묻는 질문에는 그 시점의 판으로 답합니다
+- **표 구조화 저장**: PDF·Word의 표를 행·열·타입을 유지한 채 회사별 DB에 저장합니다 (표를 SQL로 집계해 답하는 기능은 평가 중이라 아직 답변에는 쓰지 않습니다)
+- **대화 이력 관리**: 대화마다 이력이 저장되고, 사이드바에서 지난 대화를 열거나 삭제할 수 있습니다
 
 ---
 
 ## 기술 스택
 
-| 영역 | 기술 |
-|------|------|
-| 프론트엔드 | React 19, TypeScript, Vite 8 |
-| 상태 관리 | Zustand |
-| HTTP 클라이언트 | Axios |
-| 라우팅 | React Router v6 |
-| 백엔드 | FastAPI, SQLAlchemy (async) |
-| DB | PostgreSQL 16 |
-| 벡터 DB | ChromaDB |
-| 임베딩 모델 | sentence-transformers (paraphrase-multilingual-MiniLM-L12-v2) |
-| LLM | NVIDIA NIM (Nemotron 3 Super 120B A12B, 클라우드) |
-| 인증 | JWT (python-jose) |
-| 인프라 | Docker Compose |
+| 분류 | 기술 | 용도·선택 이유 |
+|---|---|---|
+| Frontend | React 19, TypeScript, Vite | 화면 구현. API 응답 형식을 타입으로 고정하기 위해 TypeScript 사용 |
+| 상태 관리 | Zustand | 인증 정보와 대화별 로딩 상태 관리 |
+| Backend | FastAPI, SQLAlchemy (async) | API·인증·RAG 처리. 임베딩 모델 등 Python AI 라이브러리를 그대로 쓸 수 있어서 |
+| DB | PostgreSQL 16 | 회사·사용자·대화·메시지 |
+| 벡터 DB | ChromaDB | 문서 분할 단위(청크)의 임베딩과 유사도 검색. 회사별로 컬렉션을 나눠 저장 |
+| 표 데이터 | DuckDB | 문서 속 표. 회사별 파일로 나누고, 열 타입을 유지한 채 SQL로 다루기 위해 |
+| 임베딩 | sentence-transformers (paraphrase-multilingual-MiniLM-L12-v2) | 한국어 문서를 다루기 위해 다국어 모델 사용 |
+| LLM | NVIDIA NIM (Nemotron 3 Super 120B A12B) | 답변 생성. 로컬 LLM(llama3.2 → gemma3:4b)에서 전환 |
+| 인증 | JWT (python-jose), bcrypt | 로그인과 API 권한 확인 |
+| 인프라 | Docker Compose | PostgreSQL과 ChromaDB를 로컬에서 실행 |
 
 ---
 
-## 프로젝트 구조
+## 시스템 구성
 
-```
-company-assistant/
-├── frontend/
-│   └── src/
-│       ├── components/
-│       │   ├── Chat/
-│       │   │   ├── Sidebar.tsx        # 대화목록, 문서관리, 프로필
-│       │   │   ├── ChatWindow.tsx     # 메시지 목록
-│       │   │   ├── MessageBubble.tsx  # 메시지 말풍선
-│       │   │   ├── InputBox.tsx       # 메시지 입력창
-│       │   │   └── DocumentModal.tsx  # 문서 관리 모달
-│       │   └── Layout/
-│       │       └── ProtectedRoute.tsx
-│       ├── pages/
-│       │   ├── LoginPage.tsx
-│       │   └── ChatPage.tsx
-│       ├── store/
-│       │   ├── authStore.ts           # 인증 상태 (persist)
-│       │   └── chatStore.ts           # 채팅 상태
-│       ├── services/
-│       │   └── api.ts                 # authApi / chatApi / documentApi
-│       └── types/
-│           └── index.ts
-│
-└── backend/
-    ├── app/
-    │   ├── api/
-    │   │   ├── auth.py                # POST /api/auth/login
-    │   │   ├── chat.py                # POST /api/chat, GET /api/chat/conversations
-    │   │   └── documents.py           # POST/GET/DELETE /api/documents
-    │   ├── core/
-    │   │   ├── config.py
-    │   │   ├── database.py
-    │   │   └── security.py            # JWT, bcrypt
-    │   ├── models/
-    │   │   ├── db_models.py           # Company, User, Conversation, Message
-    │   │   └── schemas.py
-    │   ├── rag/
-    │   │   ├── chunker.py             # 텍스트 추출 및 청킹
-    │   │   ├── embedder.py            # sentence-transformers
-    │   │   ├── retriever.py           # ChromaDB 검색/저장/삭제
-    │   │   ├── generator.py           # NVIDIA NIM LLM 호출
-    │   │   └── pipeline.py            # RAG 전체 파이프라인
-    │   ├── services/
-    │   │   └── document_service.py
-    │   └── main.py
-    ├── seed.py                        # 초기 데이터 시딩
-    ├── requirements.txt
-    └── .env.example
-```
+**문서 업로드 (관리자)**
+
+1. 프런트엔드에서 문서와 시행일을 `POST /api/documents`로 전송
+2. 백엔드에서 본문을 추출해 청크로 나누고, 임베딩을 계산해 ChromaDB의 `company_{회사ID}` 컬렉션에 저장
+3. 동시에 문서 속 표를 추출해 회사별 DuckDB 파일에 저장
+
+**질의응답 (직원)**
+
+1. `POST /api/chat`에서 JWT로 사용자와 회사를 식별
+2. 질문에 "2020년" 같은 시점이 있으면, 그 시점까지 시행된 문서로 좁혀 ChromaDB에서 상위 10개를 검색
+3. 같은 대화의 최근 메시지 6개 중 질문과 비슷한 것(코사인 유사도 0.7 이상)만 이력으로 추가
+4. 검색 결과와 이력을 LLM에 넘겨 답변을 생성하고, 질문과 답변을 PostgreSQL에 저장
 
 ---
 
-## 시작하기
+## 기술적 과제와 해결
 
-### 사전 요구사항
+### 1. 답변을 기다리는 중 대화를 바꾸면 화면이 섞임
+
+- **문제**: LLM 답변을 기다리는 동안 다른 대화로 옮기면, 로딩 표시가 옮겨 간 대화에 뜨거나 도착한 답변이 다른 대화에 붙었습니다
+- **해결**: 로딩 상태를 전역 플래그 하나로 두지 않고, "어느 대화가 로딩 중인지"(`loadingConversationId`)로 관리하도록 바꿨습니다. 답변이 도착했을 때 요청을 보낸 대화와 지금 보고 있는 대화가 다르면 화면에 추가하지 않습니다. 로딩 중인 대화로 돌아오면 DB를 다시 조회하지 않고 보관해 둔 메시지를 복원합니다
+- **결과**: 답변 생성 중에 대화를 오가도 각 대화의 내용과 로딩 표시가 올바르게 유지됩니다
+
+### 2. 규정이 개정되면 옛 내용으로 답함
+
+- **문제**: 같은 규정의 신구판을 모두 올리면 검색 결과에 옛 판 조문이 섞여, 현재와 다른 수치로 답하는 경우가 있었습니다. 반대로 "2016년 당시에는?" 같은 질문에 최신판으로 답하기도 했습니다
+- **해결**: 문서마다 시행일을 등록할 수 있게 하고, ChromaDB 메타데이터에 `YYYYMMDD` 정수로 저장했습니다 (숫자 범위 필터 `$lte`를 쓰기 위해). 질문에서 시점을 읽어 그날까지 시행된 문서만 검색합니다. 또 프롬프트에서 "기준일 이전에 시행된 판 중 가장 최신 판을 따르고, 근거가 된 판을 밝히라"고 지시합니다
+- **결과**: 같은 규정의 3개 판으로 만든 12문항 평가에서 정답 수가 4/12에서 6/12로 올랐습니다. 다만 과거 시점을 묻는 질문은 2/6에 그쳐 개선 여지가 있습니다
+
+### 3. 표 데이터 값이 바뀜
+
+- **문제**: 표를 숫자로 변환해 저장할 때, 사번 `018100002`처럼 0으로 시작하는 코드가 숫자가 되어 앞의 0이 사라졌습니다. 또 중복된 열 이름에 번호를 붙이면 이미 있는 열 이름과 겹치는 경우가 있었습니다
+- **해결**: 0으로 시작하는 값이 있는 열은 문자열 그대로 저장하고, 중복 열 이름에는 기존 이름과 겹치지 않는 번호를 붙이도록 했습니다. 두 경우 모두 테스트를 추가해 확인했습니다
+- **결과**: 원래 표의 값을 그대로 유지한 채 저장할 수 있게 됐습니다
+
+### 4. 작은 버그를 테스트로 재발 방지
+
+- **같은 문서 재업로드**: 청크 수가 줄면 옛 청크가 남아, 지워진 내용으로 답하고 있었습니다. 저장하기 전에 해당 문서의 청크를 먼저 지우도록 하고 테스트를 추가했습니다
+- **메시지 순서**: RAG 처리가 끝난 뒤 한꺼번에 저장해서, 질문의 생성 시각이 답변보다 늦게 찍혀 표시 순서가 뒤바뀌는 경우가 있었습니다. 질문 시각을 처리 전에 기록하도록 고쳤습니다
+
+### 5. 개선 여부를 수치로 판단
+
+검색 방식이나 답변 방식을 바꿀 때마다 감으로 판단하지 않도록, 평가용 하네스를 `experiments/`에 두었습니다.
+
+- `retrieval_eval`: 실제 공공기관 규정 등으로 정답 라벨을 만들어, nDCG로 검색 방식을 비교합니다
+- `sql_harness`: 표 질문을 SQL로 답하는 방식을 여러 가지 시험해 정답률·응답 시간·토큰 수를 비교합니다. 아직 기존 방식보다 나은 방식이 없어서 본체에는 넣지 않았습니다
+
+---
+
+## 설치·실행 방법
+
+### 필요한 환경
 
 - Docker Desktop
 - Python 3.12
-- Node.js 20+
-- NVIDIA NIM API 키 (build.nvidia.com 에서 발급)
+- Node.js 20 이상
+- NVIDIA NIM API 키 (build.nvidia.com에서 발급)
 
-### 1. 인프라 실행
+### 실행 순서
 
 ```bash
-cp .env.example .env          # POSTGRES_PASSWORD 설정
+# 1. 저장소 클론
+git clone https://github.com/yeekrim/company-assistant.git
+cd company-assistant
+
+# 2. DB 실행 (PostgreSQL: 5432, ChromaDB: 8001)
+cp .env.example .env              # POSTGRES_PASSWORD 설정
 docker compose up -d
-```
 
-PostgreSQL (5432), ChromaDB (8001) 실행
-
-### 2. 환경 변수 설정
-
-```bash
-cp backend/.env.example backend/.env   # DATABASE_URL, SECRET_KEY, NVIDIA_API_KEY 설정
-```
-
-### 3. 백엔드
-
-```bash
+# 3. 백엔드
 cd backend
+cp .env.example .env              # DATABASE_URL, SECRET_KEY, NVIDIA_API_KEY 설정
 python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-
-# DB 초기화 및 시딩
-python seed.py
-
-# 서버 실행
+python seed.py                    # 데모용 회사·사용자 생성
 uvicorn app.main:app --reload
-```
 
-### 4. 프론트엔드
-
-```bash
+# 4. 프런트엔드 (다른 터미널에서)
 cd frontend
 npm install
-npm run dev
+npm run dev                       # http://localhost:5173
 ```
 
-브라우저에서 http://localhost:5173 접속
+`seed.py`는 회사 2곳의 데모 사용자를 만듭니다. 로그인 ID는 `사번@도메인` 형식(예: 관리자 `admin@virtual.co.kr`, 직원 `018100002@virtual.co.kr`)이고, 비밀번호는 모두 `pass1234`입니다.
+
+### 테스트
+
+```bash
+cd backend
+pytest
+```
 
 ---
 
-## 구현 현황
+## 담당 범위
 
-### 백엔드
-- [x] JWT 인증 (로그인 / 토큰 발급)
-- [x] 회사별 다중 테넌트 구조 (Company / User)
-- [x] 역할 기반 접근 제어 (admin / employee)
-- [x] 문서 업로드 API (PDF / DOCX / TXT)
-- [x] RAG 파이프라인 (청킹 → 임베딩 → 검색 → 생성)
-- [x] PDF 표 추출 개선 (헤더 포함 구조화 텍스트 변환)
-- [x] 채팅 API (대화 생성 / 메시지 저장)
-- [x] 대화 목록 / 메시지 조회 API
-- [x] 대화 삭제 API
-- [x] 문서 목록 / 삭제 API
-- [x] LLM 모델 최적화 (llama3.2 → gemma3:4b → NVIDIA NIM Llama 3.1 70B Instruct → Nemotron 3 Super 120B)
-  - Llama 3.1 70B가 NIM에서 2026-08-26 지원 종료되어 교체
-- [x] 프롬프트 강화 (할루시네이션 방지 / 언어 혼용 방지 / 톤 설정)
-- [x] 대화 히스토리 반영 (최근 메시지 6개 중 유사도 0.7 이상 턴만 필터링하여 컨텍스트 구성)
-- [x] RAG 검색 범위 확장 (top_k 5 → 10)
-- [x] 문서 속 표를 회사별 DuckDB에 구조화해 저장
-- [x] 문서 시행일 입력 및 질문 시점에 맞는 규정으로 답변
-- [x] 같은 문서 재업로드 시 이전 청크 삭제 후 재색인
+개인 프로젝트입니다. 기획, 화면 설계, 프런트엔드, 백엔드, DB 설계, RAG 처리, 테스트, 평가 하네스까지 모두 직접 구현했습니다.
 
-### 프론트엔드
-- [x] 로그인 화면
-- [x] Protected Route
-- [x] 사이드바 (대화 목록 / 새 대화 / 대화 삭제)
-- [x] 채팅 UI (말풍선 / 자동 스크롤 / 타이핑 애니메이션)
-- [x] 실제 백엔드 API 연결
-- [x] 관리자 전용 문서 관리 모달 (업로드 / 삭제)
-- [x] 회사 이름 표시 ({회사명} 어시스턴트)
-- [x] 로그아웃 시 채팅 상태 초기화
-- [x] 대화별 로딩 상태 관리 (대화 전환 중 말풍선 / 메시지 보존)
+## 향후 개선점
+
+- 과거 시점 질문의 정답률 개선 (현재 2/6)
+- "작년" 같은 상대적 시점 표현 지원 (현재는 "2020년", "2020년 3월"처럼 명시적인 표현만 지원)
+- 저장한 표를 SQL로 집계해 답하는 기능을 평가에서 기존 방식보다 나아졌을 때 본체에 적용
+- 여러 워커로 실행할 때 DuckDB 파일 동시 쓰기 대책
