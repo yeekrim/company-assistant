@@ -1,41 +1,18 @@
-"""PDF에서 표를 '구조 그대로' 꺼낸다 (현재 chunker는 표를 텍스트로 펼쳐 500자씩 자름).
+"""PDF에서 본문 텍스트(표 제외)와 표를 분리해 꺼낸다.
 
-- 페이지마다 반복되는 같은 헤더의 표는 하나로 합친다.
-- 표 바로 위 텍스트(예: '부록 1. ...')를 표 제목으로 쓴다.
-- '12,300' 같은 문자열은 숫자로, 'YYYY-MM-DD'는 날짜로 변환한다.
+표 정리(헤더·병합·타입 변환)는 앱의 `app.tables.extractor.assemble`을 그대로 써서,
+실험 결과가 실제 앱 코드의 동작을 반영하도록 한다.
 """
-import re
-from dataclasses import dataclass
-from datetime import date
+from pathlib import Path
 
 import pdfplumber
 
-NUM = re.compile(r"^-?[\d,]+(\.\d+)?$")
-DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
-
-
-@dataclass
-class ExtractedTable:
-    title: str
-    columns: list[str]
-    rows: list[list]
-
-
-def _coerce(col: list[str]):
-    vals = [v for v in col if v != ""]
-    if vals and all(NUM.match(v) for v in vals):
-        nums = [float(v.replace(",", "")) if v else None for v in col]
-        if all(n is None or n.is_integer() for n in nums):
-            return [int(n) if n is not None else None for n in nums]
-        return nums
-    if vals and all(DATE.match(v) for v in vals):
-        return [date.fromisoformat(v) if v else None for v in col]
-    return col
+from app.tables.extractor import ExtractedTable, assemble  # noqa: F401  (common.py가 sys.path 설정)
 
 
 def extract(pdf_path: str) -> tuple[str, list[ExtractedTable]]:
     """(표를 제외한 본문 텍스트, 표 목록)을 반환."""
-    texts, tables = [], []
+    texts, raw = [], []
     with pdfplumber.open(pdf_path) as pdf:
         for page in pdf.pages:
             found = page.find_tables()
@@ -45,15 +22,18 @@ def extract(pdf_path: str) -> tuple[str, list[ExtractedTable]]:
             page_text = (outside.extract_text() or "").strip()
             if page_text:
                 texts.append(page_text)
-            for t in found:
-                raw = [[(c or "").replace("\n", " ").strip() for c in row] for row in t.extract()]
-                header, body = raw[0], raw[1:]
-                if tables and tables[-1].columns == header:  # 다음 페이지로 이어지는 표
-                    tables[-1].rows.extend(body)
-                else:
-                    title = page_text.splitlines()[-1] if page_text else f"표 {len(tables) + 1}"
-                    tables.append(ExtractedTable(title, header, body))
-    for t in tables:
-        cols = list(zip(*t.rows)) if t.rows else [[] for _ in t.columns]
-        t.rows = [list(r) for r in zip(*[_coerce(list(c)) for c in cols])]
-    return "\n\n".join(texts), tables
+            title = page_text.splitlines()[-1] if page_text else ""
+            raw += [(title, t.extract()) for t in found]
+    return "\n\n".join(texts), assemble(raw)
+
+
+def extract_many(paths: list[Path]) -> tuple[str, list[ExtractedTable]]:
+    """여러 문서: 본문은 문서 이름을 머리에 붙여 잇고, 표 제목에도 문서 이름을 붙인다."""
+    bodies, tables = [], []
+    for p in paths:
+        text, ts = extract(str(p))
+        bodies.append(f"[문서: {p.stem}]\n{text}")
+        for t in ts:
+            t.title = f"{p.stem} — {t.title}"
+        tables += ts
+    return "\n\n".join(bodies), tables

@@ -12,15 +12,16 @@ import json
 import re
 import statistics
 import time
+from pathlib import Path
 from dataclasses import asdict
 from datetime import datetime
 
 import common
 from common import ROOT, DocIndex, Trace
-from questions import load
-from variants import current, kaizen_go, kaizen_mae
+from questions import load, load_file
+from variants import current, hybrid, kaizen_go, kaizen_mae
 
-VARIANTS = {"current": current, "kaizen-mae": kaizen_mae, "kaizen-go": kaizen_go}
+VARIANTS = {"current": current, "kaizen-mae": kaizen_mae, "kaizen-go": kaizen_go, "hybrid": hybrid}
 DEPTS = ["영업팀", "개발팀", "인사팀", "재무팀", "마케팅팀"]
 
 
@@ -36,7 +37,11 @@ def grade(q: dict, ans: str) -> bool:
     ans = re.sub(r"(?s)<think>.*?</think>", "", ans)
     exp = q["expected"]
     if q["kind"] == "text":
-        return all(k in ans or k.replace(",", "") in ans for k in exp)
+        # 각 항목은 키워드 하나 또는 대안 목록. 모든 항목이 (대안 중 하나라도) 들어 있어야 정답
+        flat = re.sub(r"\s+", "", ans)
+        hit = lambda k: any(re.sub(r"\s+", "", x) in flat or x.replace(",", "") in flat for x in k) \
+            if isinstance(k, list) else hit([k])
+        return all(hit(k) for k in exp)
     if isinstance(exp, str):  # 부서명 등: 답변에서 처음 언급된 후보가 정답이어야 함
         hits = sorted((ans.find(d), d) for d in DEPTS if d in ans)
         return bool(hits) and hits[0][1] == exp
@@ -62,7 +67,8 @@ def p95(xs):
 
 
 def summarize(rows: list[dict], variants: list[str], qs: list[dict]) -> str:
-    out = [f"# SQL 하네스 벤치마크 결과\n\n- 모델: `{common.MODEL}`\n- 질문: 계산형 "
+    out = [f"# SQL 하네스 벤치마크 결과\n\n- 모델: `{common.MODEL}`\n"
+           f"- 문서: {', '.join(p.name for p in common.DOCS)}\n- 질문: 계산형 "
            f"{sum(q['kind'] == 'calc' for q in qs)}개 / 서술형 {sum(q['kind'] == 'text' for q in qs)}개\n",
            "| 방식 | 계산형 정답률 | 서술형 정답률 | 응답시간 p50 | p95 | 평균 입력 토큰 | 평균 LLM 호출 | 오류 |",
            "|---|---|---|---|---|---|---|---|"]
@@ -94,12 +100,16 @@ async def main():
     ap.add_argument("--variants", default=",".join(VARIANTS))
     ap.add_argument("--only", default="")
     ap.add_argument("--model", default=common.DEFAULT_MODEL)
+    ap.add_argument("--docs", nargs="+", help="실험할 PDF들 (기본: 생성한 가짜 PDF)")
+    ap.add_argument("--questions", help="질문 JSON 파일 (기본: questions.py의 가짜 데이터 질문)")
     ap.add_argument("--pause", type=float, default=2.0, help="질문 사이 대기(초), 요청 한도 대응")
     args = ap.parse_args()
     common.MODEL = args.model
+    if args.docs:
+        common.DOCS = [(common.ORIG_CWD / Path(d).expanduser()).resolve() for d in args.docs]
 
     variants = args.variants.split(",")
-    qs = [q for q in load() if not args.only or q["id"] in args.only.split(",")]
+    qs = [q for q in (load_file(common.ORIG_CWD / args.questions) if args.questions else load()) if not args.only or q["id"] in args.only.split(",")]
     out_dir = ROOT / "results" / datetime.now().strftime("%Y%m%d-%H%M%S")
     out_dir.mkdir(parents=True)
 
@@ -108,6 +118,7 @@ async def main():
     # 준비 비용(표 추출·DB 적재)은 업로드 시점 비용이므로 질문별 응답시간에서 제외
     kaizen_go._ensure_db(Trace())
     kaizen_mae._context(Trace())
+    hybrid._prepare(Trace())
 
     rows = []
     with (out_dir / "raw.jsonl").open("w", encoding="utf-8") as f:

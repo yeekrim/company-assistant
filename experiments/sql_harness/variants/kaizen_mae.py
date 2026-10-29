@@ -2,8 +2,9 @@
 import json
 import time
 
-from common import PDF_PATH, Trace, chat
-from tables import extract
+import common
+from common import Trace, chat
+from tables import extract_many
 
 SYSTEM = "당신은 사내 문서 기반 AI 어시스턴트입니다. 문서에 있는 내용만 답변하고, 한국어로만 답하세요."
 
@@ -14,7 +15,7 @@ def _context(trace: Trace) -> str:
     global _cache
     if _cache is None:
         t = time.perf_counter()
-        text, tables = extract(str(PDF_PATH))
+        text, tables = extract_many(common.DOCS)
         parts = [f"[본문]\n{text}"]
         for tb in tables:
             records = [dict(zip(tb.columns, r)) for r in tb.rows]
