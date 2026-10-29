@@ -20,9 +20,7 @@
 
 ---
 
-## アーキテクチャ
-
-![Architecture](docs/architecture.svg)
+## 技術スタック
 
 | 領域 | 技術 |
 |------|------|

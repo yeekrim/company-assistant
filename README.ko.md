@@ -52,12 +52,6 @@ RAG(Retrieval-Augmented Generation) 기반 사내 AI 챗봇. 회사별로 문서
 
 ---
 
-## 시스템 아키텍처
-
-![Architecture](docs/architecture.svg)
-
----
-
 ## 기술 스택
 
 | 영역 | 기술 |
