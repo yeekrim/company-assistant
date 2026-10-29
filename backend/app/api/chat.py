@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,6 +12,8 @@ from app.rag.pipeline import run as rag_run
 from app.rag.embedder import embed
 import numpy as np
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/chat", tags=["chat"])
 bearer = HTTPBearer()
@@ -122,7 +125,14 @@ async def chat(
     )
     db.add(user_msg)
 
-    answer, chunks = await rag_run(current_user.company_id, data.message, history)
+    conversation_id = conversation.id
+    try:
+        answer, chunks = await rag_run(current_user.company_id, data.message, history)
+    except Exception:
+        # LLM 오류(모델 종료·게이트웨이 오류)나 네트워크 오류. 질문만 남은 대화가 생기지 않게 저장을 되돌린다
+        logger.exception("답변 생성 실패: company=%s conversation=%s", current_user.company_id, conversation_id)
+        await db.rollback()
+        raise HTTPException(status_code=502, detail="답변을 생성하지 못했습니다. 잠시 후 다시 시도해 주세요.")
     sources = [{"source": c.source, "effective_date": format_date(c.effective_date), "text": c.text} for c in chunks]
 
     assistant_msg = Message(
