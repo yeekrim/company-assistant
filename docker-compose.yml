@@ -13,12 +13,12 @@ services:
     restart: unless-stopped
 
   chroma:
-    image: chromadb/chroma:latest
+    image: chromadb/chroma:1.5.9
     container_name: company-assistant-chroma
     ports:
       - "8001:8000"
     volumes:
-      - chroma_data:/chroma/chroma
+      - chroma_data:/data
     restart: unless-stopped
 
 volumes:
