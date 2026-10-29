@@ -45,6 +45,7 @@ export default function InputBox() {
           role: 'assistant',
           content: res.content,
           created_at: res.created_at,
+          sources: res.sources,
         };
         addMessage(assistantMsg);
       }
