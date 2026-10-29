@@ -15,7 +15,16 @@ def get_client() -> AsyncOpenAI:
     return _client
 
 
-def build_prompt(query: str, context_chunks: list[str]) -> str:
+def date_rules(as_of: str, from_query: bool) -> str:
+    """문서 시행일이 붙은 조각을 받을 때 프롬프트에 더하는 규칙."""
+    basis = "질문에 적힌 시점" if from_query else "오늘"
+    return f"""
+- 각 문서 조각 앞에는 [문서: 이름 · 시행일 날짜]가 붙어 있습니다. 기준일은 {as_of}({basis})입니다.
+- 여러 문서가 같은 사항을 다르게 정하고 있으면, 시행일이 기준일 이전인 문서 중 시행일이 가장 늦은 문서를 따르고 어느 문서(시행일) 기준인지 밝히세요. 시행일이 기준일보다 늦은 문서는 그 시점에 적용되지 않습니다.
+- 시행일이 미상인 문서가 다른 문서와 다르게 정하고 있으면, 그 차이를 함께 알려 주세요."""
+
+
+def build_prompt(query: str, context_chunks: list[str], rules: str = "") -> str:
     context = "\n\n---\n\n".join(context_chunks)
     return f"""당신은 사내 문서 기반 AI 어시스턴트입니다.
 아래 [문서 내용]을 바탕으로 질문에 친절하고 간결하게 답변하세요.
@@ -24,7 +33,7 @@ def build_prompt(query: str, context_chunks: list[str]) -> str:
 - 핵심을 전달하되, 자연스러운 문장으로 설명하세요.
 - 관련된 세부 내용이 존재하면 그것도 덧붙여 설명하세요.
 - 고유명사와 URL은 원문 그대로 사용하고, 한국어 외 다른 언어가 섞이지 않도록 하세요.
-- 관련 내용이 없으면 "업로드된 문서에서 관련 내용을 찾지 못했습니다"라고만 답하세요.
+- 관련 내용이 없으면 "업로드된 문서에서 관련 내용을 찾지 못했습니다"라고만 답하세요.{rules}
 
 [문서 내용]
 {context}
@@ -35,11 +44,11 @@ def build_prompt(query: str, context_chunks: list[str]) -> str:
 [답변]"""
 
 
-async def generate(query: str, context_chunks: list[str], history: list[dict] | None = None) -> str:
+async def generate(query: str, context_chunks: list[str], history: list[dict] | None = None, rules: str = "") -> str:
     if not context_chunks:
         return "업로드된 사내 문서에서 관련 내용을 찾지 못했습니다. 관련 문서를 먼저 업로드해 주세요."
 
-    prompt = build_prompt(query, context_chunks)
+    prompt = build_prompt(query, context_chunks, rules)
     client = get_client()
 
     messages = [

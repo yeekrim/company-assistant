@@ -10,6 +10,7 @@ from pathlib import Path
 ROOT = Path(__file__).parent
 BACKEND = ROOT.parent.parent / "backend"
 sys.path.insert(0, str(BACKEND))
+ORIG_CWD = Path.cwd()  # 상대 경로 인자를 해석할 기준
 os.chdir(BACKEND)  # app.core.config가 backend/.env를 읽도록
 
 import chromadb  # noqa: E402
@@ -19,7 +20,8 @@ from app.rag.chunker import chunk_text, extract_text  # noqa: E402  (앱과 동�
 from app.rag.embedder import embed  # noqa: E402
 from app.rag.generator import get_client  # noqa: E402
 
-PDF_PATH = ROOT / "data" / "사내규정_및_현황.pdf"
+DEFAULT_DOCS = [ROOT / "data" / "사내규정_및_현황.pdf"]
+DOCS: list[Path] = list(DEFAULT_DOCS)  # run_bench.py가 --docs로 덮어씀
 DEFAULT_MODEL = "nvidia/nemotron-3-super-120b-a12b"
 MODEL = DEFAULT_MODEL  # run_bench.py가 --model로 덮어씀
 
@@ -76,7 +78,9 @@ class DocIndex:
     chunks를 안 주면 앱의 업로드 경로(extract_text → chunk_text)를 그대로 따른다."""
 
     def __init__(self, chunks: list[str] | None = None):
-        self.chunks = chunks if chunks is not None else chunk_text(extract_text(str(PDF_PATH)))
+        if chunks is None:
+            chunks = [c for d in DOCS for c in chunk_text(extract_text(str(d)))]
+        self.chunks = chunks
         client = chromadb.EphemeralClient()
         self.col = client.create_collection(f"bench_{uuid.uuid4().hex[:8]}", metadata={"hnsw:space": "cosine"})
         self.col.upsert(

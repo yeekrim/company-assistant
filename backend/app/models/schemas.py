@@ -39,3 +39,6 @@ class ChatResponse(BaseModel):
     content: str
     created_at: str
     conversation_id: str
+
+class EffectiveDateRequest(BaseModel):
+    effective_date: str | None = None  # YYYY-MM-DD, 비우면 미상

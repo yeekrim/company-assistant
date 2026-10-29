@@ -57,6 +57,13 @@ TEXT = [
 ]
 
 
+def load_file(path: str) -> list[dict]:
+    """질문 JSON: [{"id", "kind": "text"|"calc", "question", "expected", "note"?}]
+    text의 expected는 [키워드 또는 [대안들]] 목록, calc의 expected는 숫자 또는 부서명 같은 문자열."""
+    import json
+    return json.loads(Path(path).expanduser().read_text(encoding="utf-8"))
+
+
 def load() -> list[dict]:
     con = duckdb.connect()
     qs = []

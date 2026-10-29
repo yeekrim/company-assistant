@@ -3,9 +3,9 @@ services:
     image: postgres:16
     container_name: company-assistant-db
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin1234
-      POSTGRES_DB: company_assistant
+      POSTGRES_USER: ${POSTGRES_USER:-admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?.env に POSTGRES_PASSWORD を設定してください}
+      POSTGRES_DB: ${POSTGRES_DB:-company_assistant}
     ports:
       - "5432:5432"
     volumes:

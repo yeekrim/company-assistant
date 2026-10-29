@@ -151,3 +151,131 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+.dateBtn,
+.dateBtnMissing {
+  flex-shrink: 0;
+  padding: 4px 8px;
+  border: 1px solid #e8e2d9;
+  border-radius: 6px;
+  background: transparent;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+
+.dateBtn {
+  color: #6b6259;
+}
+
+.dateBtnMissing {
+  color: #c98a2b;
+  border-color: #f0d9b5;
+  background: rgba(201, 138, 43, 0.06);
+}
+
+.dateBtn:hover,
+.dateBtnMissing:hover {
+  border-color: #5b9bd5;
+  color: #5b9bd5;
+}
+
+.dateEditor {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.dateInput {
+  padding: 4px 6px;
+  border: 1px solid #e8e2d9;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #2c2825;
+  background: #ffffff;
+}
+
+.dateSaveBtn,
+.dateCancelBtn {
+  padding: 4px 8px;
+  border: 1px solid #e8e2d9;
+  border-radius: 6px;
+  background: transparent;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.dateSaveBtn {
+  color: #5b9bd5;
+  border-color: #5b9bd5;
+}
+
+.dateCancelBtn {
+  color: #b5aca2;
+}
+
+.dateSaveBtn:disabled,
+.dateCancelBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pendingHint {
+  margin: 0 0 10px;
+  font-size: 12px;
+  color: #6b6259;
+}
+
+.pendingList {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.pendingItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: #faf9f7;
+  border: 1px solid #e8e2d9;
+  border-radius: 10px;
+}
+
+.pendingActions {
+  display: flex;
+  gap: 8px;
+}
+
+.cancelBtn {
+  flex-shrink: 0;
+  padding: 12px 18px;
+  border: 1px solid #e8e2d9;
+  border-radius: 10px;
+  background: transparent;
+  color: #6b6259;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.cancelBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+  .docItem {
+    flex-wrap: wrap;
+  }
+
+  .pendingItem {
+    flex-wrap: wrap;
+  }
+}

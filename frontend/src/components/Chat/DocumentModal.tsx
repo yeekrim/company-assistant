@@ -5,17 +5,33 @@ import styles from './DocumentModal.module.css';
 interface Doc {
   name: string;
   chunks: number;
+  effective_date: number; // YYYYMMDD, 모르면 0
+}
+
+interface PendingFile {
+  file: File;
+  date: string; // YYYY-MM-DD
 }
 
 interface Props {
   onClose: () => void;
 }
 
+// 20230105 → '2023-01-05', 0 → ''
+function toInputDate(value: number): string {
+  if (!value) return '';
+  const s = String(value);
+  return `${s.slice(0, 4)}-${s.slice(4, 6)}-${s.slice(6, 8)}`;
+}
+
 export default function DocumentModal({ onClose }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [docs, setDocs] = useState<Doc[]>([]);
+  const [pending, setPending] = useState<PendingFile[]>([]);
   const [uploading, setUploading] = useState(false);
   const [deletingDoc, setDeletingDoc] = useState<string | null>(null);
+  const [editing, setEditing] = useState<{ name: string; date: string } | null>(null);
+  const [savingDate, setSavingDate] = useState(false);
 
   const loadDocs = useCallback(async () => {
     try {
@@ -25,21 +41,45 @@ export default function DocumentModal({ onClose }: Props) {
 
   useEffect(() => { loadDocs(); }, [loadDocs]);
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // 파일을 고르면 바로 올리지 않고, 파일마다 시행일을 입력받은 뒤 올린다
+  const handleSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
-    if (!files.length) return;
     e.target.value = '';
+    if (!files.length) return;
+    setPending(files.map((file) => ({ file, date: '' })));
+  };
+
+  const setPendingDate = (index: number, date: string) => {
+    setPending((prev) => prev.map((p, i) => (i === index ? { ...p, date } : p)));
+  };
+
+  const handleUpload = async () => {
     setUploading(true);
     try {
-      const res = await documentApi.upload(files);
+      const res = await documentApi.upload(pending.map((p) => p.file), pending.map((p) => p.date));
       if (res.errors.length > 0) {
-        alert(`업로드 실패: ${res.errors.map((e) => e.file).join(', ')}`);
+        alert(`업로드 실패:\n${res.errors.map((e) => `${e.file}: ${e.error}`).join('\n')}`);
       }
+      setPending([]);
       await loadDocs();
     } catch {
       alert('업로드 실패. 다시 시도해주세요.');
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleSaveDate = async () => {
+    if (!editing) return;
+    setSavingDate(true);
+    try {
+      await documentApi.setEffectiveDate(editing.name, editing.date);
+      setEditing(null);
+      await loadDocs();
+    } catch {
+      alert('시행일 저장 실패. 다시 시도해주세요.');
+    } finally {
+      setSavingDate(false);
     }
   };
 
@@ -55,6 +95,8 @@ export default function DocumentModal({ onClose }: Props) {
       setDeletingDoc(null);
     }
   };
+
+  const allDated = pending.every((p) => p.date);
 
   return (
     <div className={styles.overlay} onClick={onClose}>
@@ -74,6 +116,36 @@ export default function DocumentModal({ onClose }: Props) {
                   <span className={styles.docIcon}>📄</span>
                   <span className={styles.docName} title={doc.name}>{doc.name}</span>
 
+                  {editing?.name === doc.name ? (
+                    <span className={styles.dateEditor}>
+                      <input
+                        type="date"
+                        className={styles.dateInput}
+                        value={editing.date}
+                        onChange={(e) => setEditing({ name: doc.name, date: e.target.value })}
+                        aria-label={`${doc.name} 시행일`}
+                      />
+                      <button
+                        className={styles.dateSaveBtn}
+                        onClick={handleSaveDate}
+                        disabled={savingDate || !editing.date}
+                      >
+                        저장
+                      </button>
+                      <button className={styles.dateCancelBtn} onClick={() => setEditing(null)} disabled={savingDate}>
+                        취소
+                      </button>
+                    </span>
+                  ) : (
+                    <button
+                      className={doc.effective_date ? styles.dateBtn : styles.dateBtnMissing}
+                      onClick={() => setEditing({ name: doc.name, date: toInputDate(doc.effective_date) })}
+                      title="시행일 수정"
+                    >
+                      {doc.effective_date ? `시행 ${toInputDate(doc.effective_date)}` : '시행일 입력'}
+                    </button>
+                  )}
+
                   <button
                     className={styles.deleteBtn}
                     onClick={() => handleDelete(doc.name)}
@@ -88,20 +160,49 @@ export default function DocumentModal({ onClose }: Props) {
         </div>
 
         <div className={styles.footer}>
-          <button
-            className={styles.uploadBtn}
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-          >
-            {uploading ? '업로드 중...' : '📤 문서 업로드'}
-          </button>
+          {pending.length > 0 ? (
+            <>
+              <p className={styles.pendingHint}>각 문서의 시행일을 입력하세요. 규정이 서로 다르면 질문 시점에 시행 중인 최신 문서를 따릅니다.</p>
+              <ul className={styles.pendingList}>
+                {pending.map((p, i) => (
+                  <li key={`${p.file.name}-${i}`} className={styles.pendingItem}>
+                    <span className={styles.docName} title={p.file.name}>{p.file.name}</span>
+                    <input
+                      type="date"
+                      className={styles.dateInput}
+                      value={p.date}
+                      onChange={(e) => setPendingDate(i, e.target.value)}
+                      aria-label={`${p.file.name} 시행일`}
+                      required
+                    />
+                  </li>
+                ))}
+              </ul>
+              <div className={styles.pendingActions}>
+                <button className={styles.cancelBtn} onClick={() => setPending([])} disabled={uploading}>
+                  취소
+                </button>
+                <button className={styles.uploadBtn} onClick={handleUpload} disabled={uploading || !allDated}>
+                  {uploading ? '업로드 중...' : `📤 ${pending.length}개 업로드`}
+                </button>
+              </div>
+            </>
+          ) : (
+            <button
+              className={styles.uploadBtn}
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+            >
+              📤 문서 업로드
+            </button>
+          )}
           <input
             ref={fileInputRef}
             type="file"
             accept=".pdf,.docx,.txt,.md"
             multiple
             style={{ display: 'none' }}
-            onChange={handleUpload}
+            onChange={handleSelect}
           />
         </div>
       </div>

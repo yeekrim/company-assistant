@@ -15,8 +15,9 @@ import duckdb
 
 from app.rag.chunker import chunk_text
 
-from common import PDF_PATH, ROOT, DocIndex, Trace, chat
-from tables import extract
+import common
+from common import ROOT, DocIndex, Trace, chat
+from tables import extract_many
 
 DB_PATH = ROOT / "data" / "kaizen_go.duckdb"
 MAX_ROUNDS = 4
@@ -48,7 +49,7 @@ TOOLS = [
 
 def _build_db() -> tuple[duckdb.DuckDBPyConnection, str, DocIndex]:
     """업로드 시점에 해당: PDF 표 → DuckDB 테이블, 본문 + 표 요약 → 벡터 인덱스."""
-    body, tables = extract(str(PDF_PATH))
+    body, tables = extract_many(common.DOCS)
     DB_PATH.unlink(missing_ok=True)
     w = duckdb.connect(str(DB_PATH))
     lines = []

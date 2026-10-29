@@ -55,18 +55,25 @@ export const chatApi = {
 };
 
 export const documentApi = {
-  upload: async (files: File[]): Promise<{ uploaded: { file: string }[]; errors: { file: string; error: string }[] }> => {
+  // effectiveDates: files와 같은 순서의 시행일(YYYY-MM-DD)
+  upload: async (files: File[], effectiveDates: string[]): Promise<{ uploaded: { file: string }[]; errors: { file: string; error: string }[] }> => {
     const formData = new FormData();
     files.forEach((f) => formData.append('files', f));
+    effectiveDates.forEach((d) => formData.append('effective_dates', d));
     const res = await api.post('/api/documents/upload', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
     return res.data;
   },
 
-  list: async (): Promise<{ name: string; chunks: number }[]> => {
+  // effective_date: YYYYMMDD 정수, 모르면 0
+  list: async (): Promise<{ name: string; chunks: number; effective_date: number }[]> => {
     const res = await api.get('/api/documents');
     return res.data.documents;
+  },
+
+  setEffectiveDate: async (docName: string, effectiveDate: string): Promise<void> => {
+    await api.patch(`/api/documents/${encodeURIComponent(docName)}`, { effective_date: effectiveDate });
   },
 
   delete: async (docName: string): Promise<void> => {
