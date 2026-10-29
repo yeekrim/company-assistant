@@ -24,11 +24,18 @@ export interface LoginResponse {
   user: User;
 }
 
+export interface SourceChunk {
+  source: string;
+  effective_date: string; // YYYY-MM-DD 또는 '미상'
+  text: string;
+}
+
 export interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   created_at: string;
+  sources?: SourceChunk[]; // assistant 답변의 근거 청크
 }
 
 export interface Conversation {

@@ -6,6 +6,7 @@ from app.core.database import get_db
 from app.core.security import decode_token
 from app.models.db_models import User, Conversation, Message
 from app.models.schemas import ChatRequest, ChatResponse
+from app.rag.dates import format_date
 from app.rag.pipeline import run as rag_run
 from app.rag.embedder import embed
 import numpy as np
@@ -68,7 +69,8 @@ async def get_messages(
     )
     messages = msg_result.scalars().all()
     return [
-        {"id": str(m.id), "role": m.role, "content": m.content, "created_at": m.created_at.isoformat()}
+        {"id": str(m.id), "role": m.role, "content": m.content, "created_at": m.created_at.isoformat(),
+         "sources": m.sources or []}
         for m in messages
     ]
 
@@ -120,12 +122,14 @@ async def chat(
     )
     db.add(user_msg)
 
-    answer = await rag_run(current_user.company_id, data.message, history)
+    answer, chunks = await rag_run(current_user.company_id, data.message, history)
+    sources = [{"source": c.source, "effective_date": format_date(c.effective_date), "text": c.text} for c in chunks]
 
     assistant_msg = Message(
         conversation_id=conversation.id,
         role="assistant",
         content=answer,
+        sources=sources,
         created_at=datetime.utcnow(),
     )
     db.add(assistant_msg)
@@ -137,6 +141,7 @@ async def chat(
         content=answer,
         created_at=assistant_msg.created_at.isoformat(),
         conversation_id=str(conversation.id),
+        sources=sources,
     )
 
 @router.delete("/conversations/{conversation_id}")

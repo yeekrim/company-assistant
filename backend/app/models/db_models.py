@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import String, DateTime, ForeignKey, Text
+from sqlalchemy import JSON, String, DateTime, ForeignKey, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 
@@ -51,6 +51,8 @@ class Message(Base):
     conversation_id: Mapped[int] = mapped_column(ForeignKey("conversations.id"))
     role: Mapped[str] = mapped_column(String(20))  # user | assistant
     content: Mapped[str] = mapped_column(Text)
+    # assistant 답변의 근거 청크 [{source, effective_date, text}]. user 메시지와 이 컬럼 추가 전 답변은 None
+    sources: Mapped[list | None] = mapped_column(JSON, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     conversation: Mapped["Conversation"] = relationship(back_populates="messages")

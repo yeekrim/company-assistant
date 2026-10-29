@@ -33,12 +33,18 @@ class ChatRequest(BaseModel):
     conversation_id: int | None = None
     message: str
 
+class SourceChunk(BaseModel):
+    source: str
+    effective_date: str  # YYYY-MM-DD 또는 '미상'
+    text: str
+
 class ChatResponse(BaseModel):
     id: str
     role: str
     content: str
     created_at: str
     conversation_id: str
+    sources: list[SourceChunk] = []
 
 class EffectiveDateRequest(BaseModel):
     effective_date: str | None = None  # YYYY-MM-DD, 비우면 미상

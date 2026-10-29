@@ -20,7 +20,7 @@ def run_with_fakes(monkeypatch, query):
 
     monkeypatch.setattr(pipeline, "search_chunks", fake_search)
     monkeypatch.setattr(pipeline, "generate", fake_generate)
-    asyncio.run(pipeline.run(1, query))
+    seen["result"] = asyncio.run(pipeline.run(1, query))
     return seen
 
 
@@ -30,6 +30,12 @@ def test_dated_question_filters_and_states_basis(monkeypatch):
     assert seen["context"][0] == "[문서: 복무_2016.pdf · 시행일 2016-01-01]\n연차는 15일"
     assert seen["context"][1].startswith("[문서: 기타.pdf · 시행일 미상]")
     assert "기준일은 2016-12-31(질문에 적힌 시점)" in seen["rules"]
+
+
+def test_returns_answer_with_source_chunks(monkeypatch):
+    result = run_with_fakes(monkeypatch, "연차가 며칠이야?")["result"]
+    assert result.answer == "답"
+    assert [(c.source, c.text) for c in result.sources] == [("복무_2016.pdf", "연차는 15일"), ("기타.pdf", "기타")]
 
 
 def test_undated_question_uses_today(monkeypatch):

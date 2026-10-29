@@ -1,7 +1,7 @@
 from openai import AsyncOpenAI
 from app.core.config import settings
 
-NVIDIA_MODEL = "nvidia/nemotron-3-super-120b-a12b"
+NVIDIA_MODEL = "nvidia/nemotron-3.5-super-vl-120b-a12b"
 
 _client = None
 

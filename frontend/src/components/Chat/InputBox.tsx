@@ -14,8 +14,11 @@ export default function InputBox() {
     const content = text.trim();
     if (!content || isLoading) return;
 
-    // 요청 시점의 conversationId 고정
+    // 요청 시점의 conversationId 고정 (새 대화면 null → 서버가 새로 만듦)
     const requestedConversationId = currentConversationId;
+    // 새 대화는 응답 전까지 임시 id로 구분해 로딩 표시와 대화 전환 판단에 사용
+    const localConversationId = requestedConversationId ?? `pending-${Date.now()}`;
+    if (!requestedConversationId) setCurrentConversation(localConversationId);
 
     const userMsg: Message = {
       id: Date.now().toString(),
@@ -27,14 +30,14 @@ export default function InputBox() {
     addMessage(userMsg);
     setText('');
     if (textareaRef.current) textareaRef.current.style.height = 'auto';
-    setLoading(true, requestedConversationId);
+    setLoading(true, localConversationId);
 
     try {
       const res = await chatApi.sendMessage(content, requestedConversationId ?? undefined);
 
       // 응답이 왔을 때 여전히 같은 대화를 보고 있는 경우만 메시지 추가
       const stillOnSameConversation =
-        useChatStore.getState().currentConversationId === (res.conversation_id ?? requestedConversationId);
+        useChatStore.getState().currentConversationId === localConversationId;
 
       if (stillOnSameConversation) {
         const assistantMsg: Message = {
@@ -42,13 +45,15 @@ export default function InputBox() {
           role: 'assistant',
           content: res.content,
           created_at: res.created_at,
+          sources: res.sources,
         };
         addMessage(assistantMsg);
       }
 
-      // 새 대화였으면 conversation_id 세팅 + 사이드바 목록에 추가
+      // 새 대화였으면 사이드바 목록에 추가하고, 보고 있는 중이면 임시 id를 실제 id로 교체
       if (!requestedConversationId) {
-        setCurrentConversation(res.conversation_id);
+        setLoading(false);
+        if (stillOnSameConversation) setCurrentConversation(res.conversation_id);
         addConversation({
           id: res.conversation_id,
           title: content.slice(0, 30),

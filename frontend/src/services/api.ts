@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
-import type { LoginRequest, LoginResponse } from '../types';
+import type { LoginRequest, LoginResponse, SourceChunk } from '../types';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000',
@@ -34,7 +34,7 @@ export const chatApi = {
   sendMessage: async (
     query: string,
     conversationId?: string
-  ): Promise<{ id: string; content: string; created_at: string; conversation_id: string }> => {
+  ): Promise<{ id: string; content: string; created_at: string; conversation_id: string; sources: SourceChunk[] }> => {
     const res = await api.post('/api/chat', { message: query, conversation_id: conversationId ? Number(conversationId) : null });
     return res.data;
   },
@@ -44,7 +44,7 @@ export const chatApi = {
     return res.data;
   },
 
-  getMessages: async (conversationId: string): Promise<{ id: string; role: string; content: string; created_at: string }[]> => {
+  getMessages: async (conversationId: string): Promise<{ id: string; role: string; content: string; created_at: string; sources: SourceChunk[] }[]> => {
     const res = await api.get(`/api/chat/conversations/${conversationId}/messages`);
     return res.data;
   },
