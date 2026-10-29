@@ -1,5 +1,7 @@
 # Company Assistant
 
+[![CI](https://github.com/yeekrim/company-assistant/actions/workflows/ci.yml/badge.svg)](https://github.com/yeekrim/company-assistant/actions/workflows/ci.yml)
+
 [日本語](README.md)
 
 사내 규정·매뉴얼을 바탕으로 직원의 질문에 답하는 기업용 AI 챗 애플리케이션입니다.
@@ -209,7 +211,7 @@ npm run dev
 
 ### 5. 테스트 실행
 
-backend 디렉터리에서 실행합니다.
+backend 디렉터리에서 실행합니다. 테스트는 실제 DB·LLM에 접속하지 않아서 `.env` 없이도 실행됩니다. PR마다 GitHub Actions에서도 백엔드 테스트와 프런트엔드 lint·build를 실행합니다.
 
 ```bash
 pytest
