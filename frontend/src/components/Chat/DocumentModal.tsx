@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useCallback } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { documentApi } from '../../services/api';
 import styles from './DocumentModal.module.css';
 
@@ -32,14 +32,25 @@ export default function DocumentModal({ onClose }: Props) {
   const [deletingDoc, setDeletingDoc] = useState<string | null>(null);
   const [editing, setEditing] = useState<{ name: string; date: string } | null>(null);
   const [savingDate, setSavingDate] = useState(false);
+  const [loadError, setLoadError] = useState(false);
 
-  const loadDocs = useCallback(async () => {
+  const loadDocs = async () => {
     try {
       setDocs(await documentApi.list());
-    } catch {}
-  }, []);
+      setLoadError(false);
+    } catch {
+      setLoadError(true);
+    }
+  };
 
-  useEffect(() => { loadDocs(); }, [loadDocs]);
+  // 처음 열 때 목록 불러오기. setState는 응답 콜백 안에서만 하고, 모달이 닫히면 결과를 버린다
+  useEffect(() => {
+    let cancelled = false;
+    documentApi.list()
+      .then((list) => { if (!cancelled) setDocs(list); })
+      .catch(() => { if (!cancelled) setLoadError(true); });
+    return () => { cancelled = true; };
+  }, []);
 
   // 파일을 고르면 바로 올리지 않고, 파일마다 시행일을 입력받은 뒤 올린다
   const handleSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -107,7 +118,9 @@ export default function DocumentModal({ onClose }: Props) {
         </div>
 
         <div className={styles.body}>
-          {docs.length === 0 ? (
+          {loadError && docs.length === 0 ? (
+            <p className={styles.empty}>문서 목록을 불러오지 못했습니다</p>
+          ) : docs.length === 0 ? (
             <p className={styles.empty}>업로드된 문서가 없습니다</p>
           ) : (
             <ul className={styles.docList}>

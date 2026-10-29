@@ -83,3 +83,14 @@
   color: #c4bdb5;
   margin: 8px 0 0;
 }
+
+.error {
+  max-width: 820px;
+  margin: 8px auto 0;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: #b4443a;
+  background: #fdf1ef;
+  border: 1px solid #f2d3ce;
+  border-radius: 10px;
+}

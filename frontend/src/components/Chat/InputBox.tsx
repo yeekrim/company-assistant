@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import axios from 'axios';
 import { useChatStore } from '../../store/chatStore';
 import { chatApi } from '../../services/api';
 import type { Message } from '../../types';
@@ -6,7 +7,8 @@ import styles from './InputBox.module.css';
 
 export default function InputBox() {
   const [text, setText] = useState('');
-  const { loadingConversationId, currentConversationId, addMessage, setLoading, setCurrentConversation, addConversation } = useChatStore();
+  const [error, setError] = useState<string | null>(null);
+  const { loadingConversationId, currentConversationId, addMessage, setMessages, setLoading, setCurrentConversation, addConversation, startNewConversation } = useChatStore();
   const isLoading = loadingConversationId !== null;
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -29,6 +31,7 @@ export default function InputBox() {
 
     addMessage(userMsg);
     setText('');
+    setError(null);
     if (textareaRef.current) textareaRef.current.style.height = 'auto';
     setLoading(true, localConversationId);
 
@@ -60,6 +63,18 @@ export default function InputBox() {
           created_at: res.created_at,
         });
       }
+    } catch (err) {
+      // 실패한 질문은 서버에 저장되지 않으므로 화면에서도 빼고, 다시 보낼 수 있게 입력창에 되돌린다
+      if (useChatStore.getState().currentConversationId === localConversationId) {
+        if (requestedConversationId) {
+          setMessages(useChatStore.getState().messages.filter((m) => m.id !== userMsg.id));
+        } else {
+          startNewConversation();
+        }
+        setText(content);
+      }
+      const detail = axios.isAxiosError(err) ? err.response?.data?.detail : undefined;
+      setError(typeof detail === 'string' ? detail : '답변을 받지 못했습니다. 네트워크 상태를 확인하고 다시 시도해 주세요.');
     } finally {
       setLoading(false);
     }
@@ -99,6 +114,11 @@ export default function InputBox() {
           ↑
         </button>
       </div>
+      {error && (
+        <p className={styles.error} role="alert">
+          {error}
+        </p>
+      )}
       <p className={styles.hint}>Enter로 전송 · Shift+Enter로 줄바꿈</p>
     </div>
   );
