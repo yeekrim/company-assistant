@@ -27,7 +27,7 @@
 | Vector Database | ChromaDB | 문서 청크 임베딩 저장과 유사도 검색 |
 | Table Data | DuckDB | 추출한 표 데이터 구조화 저장 |
 | Embedding | sentence-transformers | 다국어 텍스트 벡터화 |
-| LLM | NVIDIA NIM (Nemotron 3 Super 120B A12B) | 검색 결과 기반 답변 생성 |
+| LLM | NVIDIA NIM (Nemotron 3.5 Super VL 120B A12B) | 검색 결과 기반 답변 생성 |
 | Authentication | JWT, bcrypt | 인증, 비밀번호 해싱, API 접근 제어 |
 | Infrastructure | Docker Compose | PostgreSQL·ChromaDB 로컬 실행 |
 | Testing | pytest | 기능·회귀 테스트 |
@@ -83,7 +83,7 @@
 
 **결과**
 
-3개 판으로 이루어진 규정으로 만든 12문항 평가에서 정답 수가 **4/12에서 6/12로 향상**되었습니다. 다만 과거 시점 질문의 정답 수는 2/6이라 계속 개선하고 있습니다.
+3개 판으로 이루어진 규정으로 만든 12문항 평가(이전 모델 Nemotron 3 Super로 측정)에서 정답 수가 **4/12에서 6/12로 향상**되었습니다. 다만 과거 시점 질문의 정답 수는 2/6이라 계속 개선하고 있습니다.
 
 ### 3. 표 데이터의 타입과 열 이름 정합성
 

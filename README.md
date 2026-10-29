@@ -27,7 +27,7 @@
 | Vector Database | ChromaDB | 文書チャンクの埋め込み保存と類似度検索 |
 | Table Data | DuckDB | 抽出した表データの構造化保存 |
 | Embedding | sentence-transformers | 多言語テキストのベクトル化 |
-| LLM | NVIDIA NIM（Nemotron 3 Super 120B A12B） | 検索結果に基づく回答生成 |
+| LLM | NVIDIA NIM（Nemotron 3.5 Super VL 120B A12B） | 検索結果に基づく回答生成 |
 | Authentication | JWT, bcrypt | 認証、パスワードハッシュ化、APIアクセス制御 |
 | Infrastructure | Docker Compose | PostgreSQL・ChromaDBのローカル実行 |
 | Testing | pytest | 機能・回帰テスト |
@@ -83,7 +83,7 @@
 
 **結果**
 
-3つの版からなる規程を用いた12問の評価で、正答数が **4/12から6/12に向上**しました。ただし、過去時点に関する質問の正答数は2/6であり、引き続き改善を進めています。
+3つの版からなる規程を用いた12問の評価（旧モデル Nemotron 3 Super で測定）で、正答数が **4/12から6/12に向上**しました。ただし、過去時点に関する質問の正答数は2/6であり、引き続き改善を進めています。
 
 ### 3. 表データの型と列名の整合性
 
