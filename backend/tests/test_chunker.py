@@ -73,3 +73,65 @@ def test_extract_text_from_docx():
         assert content in result
     finally:
         os.unlink(path)
+
+
+# ── 조문 단위 청킹 ──────────────────────────────────────────────
+
+REGULATION = """국가공무원 복무규정
+제1조(목적) 이 영은 복무에 관한 사항을 규정한다.
+제2조(선서) ① 공무원은 선서를 하여야 한다.
+② 선서는 별표 1에 따른다.
+제20조(특별휴가) ① 경조사휴가를 주어야 한다.
+② 임신 중인 공무원은 90일(미숙아는 100일)의 출산휴가를 사용할 수 있다. 다만, 다음 각 호의 어느 하나에 해당하면 나누어 쓸 수 있다.
+1. 유산ㆍ사산의 경험이 있는 경우
+2. 40세 이상인 경우
+부칙<대통령령 제1호, 1970. 6. 15.>
+제2조(출산휴가에 관한 적용례) 제20조제2항은 미숙아를 출산하는 경우부터 적용한다.
+별표 1을 다음과 같이 한다.
+[별표 1]
+선서문
+[별표 2] 국내 여비 지급표(제16조 관련)
+[별표 2] 국내 여비 지급표(제16조 관련)
+숙박비 상한액: 서울특별시 70,000
+"""
+
+
+def test_article_chunks_keep_paragraph_with_its_items():
+    chunks = chunk_text(REGULATION, chunk_size=120)
+    leave = [c for c in chunks if "90일" in c]
+    assert len(leave) == 1
+    assert "1. 유산" in leave[0] and "2. 40세" in leave[0]  # 항 아래 호가 같은 청크에 있다
+
+
+def test_split_article_chunks_are_prefixed_with_article_title():
+    chunks = chunk_text(REGULATION, chunk_size=120)
+    leave = next(c for c in chunks if "90일" in c)
+    assert leave.startswith("제20조(특별휴가) ② 임신 중인")
+
+
+def test_addenda_are_skipped_but_appendix_after_them_is_kept():
+    joined = "\n".join(chunk_text(REGULATION, chunk_size=120))
+    assert "적용례" not in joined and "대통령령 제1호" not in joined
+    assert "선서문" not in joined  # 부칙의 "별표 1을 다음과 같이 한다." 뒤 [별표 1]은 인용이라 부칙의 일부
+    assert "서울특별시 70,000" in joined
+    assert joined.count("[별표 2] 국내 여비 지급표") == 1  # 반복된 별표 제목은 한 번만
+
+
+def test_article_chunks_do_not_exceed_size_plus_title():
+    for c in chunk_text(REGULATION * 3, chunk_size=60):
+        assert len(c) <= 60 + len("제20조(특별휴가) ")
+
+
+def test_plain_document_still_uses_character_chunks():
+    text = "가" * 1200
+    assert chunk_text(text) == [text[0:500], text[450:950], text[900:1200]]
+
+
+def test_main_articles_after_leading_addenda_are_kept():
+    # 개정 이력(부칙)을 문서 맨 앞에 두는 사규
+    text = "부칙<2024. 10. 23.>\n이 규정은 2024년 10월 28일부터 시행한다.\n제1조(시행일) 공포한 날부터 시행한다.\n" \
+           "제1조(목적) 이 규정은 여비 지급을 정한다.\n제2조(정의) 여비란 운임을 말한다.\n제3조(지급) 여비는 별표에 따른다.\n" \
+           "<별표 1> 국내여비\n숙박비 70,000"
+    joined = "\n".join(chunk_text(text))
+    assert "공포한 날부터" not in joined and "2024년 10월 28일" not in joined
+    assert "제1조(목적)" in joined and "제3조(지급)" in joined and "숙박비 70,000" in joined
